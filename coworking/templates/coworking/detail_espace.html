@@ -1,0 +1,677 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ espace.nom }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Détail Espace - Plateforme de Coworking */
+
+/* Variables CSS (reprendre la même palette) */
+:root {
+    /* Couleurs principales */
+    --color-primary: #1E3A8A;
+    --color-secondary: #64748B;
+    --color-accent: #F59E0B;
+    --color-background: #F8FAFC;
+    --color-surface: #FFFFFF;
+    --color-success: #16A34A;
+    --color-error: #DC2626;
+    --color-warning: #FBBF24;
+    --color-info: #0EA5E9;
+    
+    /* Textes */
+    --text-primary: #111827;
+    --text-secondary: #475569;
+    
+    /* Ombres et effets */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    
+    /* Transitions */
+    --transition-fast: all 0.15s ease-in-out;
+    --transition-medium: all 0.3s ease-in-out;
+    --transition-slow: all 0.5s ease-in-out;
+    
+    /* Bordures */
+    --border-radius: 12px;
+    --border-radius-sm: 6px;
+    --border-radius-lg: 16px;
+    --border-radius-xl: 24px;
+    
+    /* Espacement */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 0.75rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+    --spacing-3xl: 4rem;
+}
+
+/* Container principal */
+.detail-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+    background: var(--color-background);
+    min-height: 100vh;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header du détail */
+.detail-header {
+    background: linear-gradient(135deg, var(--color-surface) 0%, #F1F5F9 100%);
+    padding: var(--spacing-2xl);
+    border-radius: var(--border-radius-xl);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(30, 58, 138, 0.1);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.detail-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(30, 58, 138, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+
+.detail-header::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -30%;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float 8s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+.detail-title {
+    font-size: 2.75rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.espace-type {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 2;
+    box-shadow: var(--shadow-md);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Contenu principal */
+.detail-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+}
+
+/* Informations de l'espace */
+.espace-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.info-card {
+    background: var(--color-surface);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: var(--transition-medium);
+    position: relative;
+    overflow: hidden;
+}
+
+.info-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: var(--transition-medium);
+}
+
+.info-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.info-card:hover::before {
+    transform: scaleX(1);
+}
+
+.info-title {
+    color: var(--text-primary);
+    font-size: 1.375rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-lg);
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.info-title::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-primary), transparent);
+    margin-left: var(--spacing-md);
+    border-radius: 2px;
+}
+
+/* Liste d'informations */
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.info-list li {
+    padding: var(--spacing-md) 0;
+    border-bottom: 1px solid #E2E8F0;
+    color: var(--text-secondary);
+    font-weight: 500;
+    position: relative;
+    padding-left: var(--spacing-xl);
+    transition: var(--transition-fast);
+}
+
+.info-list li:last-child {
+    border-bottom: none;
+}
+
+.info-list li::before {
+    content: '▶';
+    position: absolute;
+    left: 0;
+    color: var(--color-accent);
+    font-size: 0.875rem;
+    transition: var(--transition-fast);
+}
+
+.info-list li:hover {
+    color: var(--text-primary);
+    padding-left: calc(var(--spacing-xl) + 4px);
+}
+
+.info-list li:hover::before {
+    color: var(--color-primary);
+}
+
+/* Texte des équipements */
+.equipements-text {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin: 0;
+    padding: var(--spacing-lg);
+    background: #F8FAFC;
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--color-info);
+    position: relative;
+}
+
+.equipements-text::before {
+    content: '💡';
+    position: absolute;
+    top: var(--spacing-lg);
+    left: var(--spacing-sm);
+    font-size: 1.25rem;
+}
+
+/* Actions de l'espace */
+.espace-actions {
+    background: var(--color-surface);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    align-items: stretch;
+    position: sticky;
+    top: var(--spacing-xl);
+    height: fit-content;
+}
+
+/* Message d'authentification requis */
+.auth-required {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    text-align: center;
+    margin: 0;
+    padding: var(--spacing-lg);
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+/* Boutons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: var(--transition-medium);
+    cursor: pointer;
+    border: 2px solid transparent;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: var(--transition-medium);
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, #1D4ED8 100%);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1E40AF 0%, var(--color-primary) 100%);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-xl);
+}
+
+.btn-large {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.btn-outline:hover {
+    background: var(--color-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Section des réservations récentes */
+.recent-reservations {
+    background: var(--color-surface);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    animation: slideInUp 0.6s ease-out 0.4s;
+    animation-fill-mode: both;
+}
+
+.section-title {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-lg);
+    position: relative;
+    padding-bottom: var(--spacing-sm);
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+    border-radius: 2px;
+}
+
+/* Liste des réservations */
+.reservations-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.reservation-item {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: var(--transition-medium);
+    position: relative;
+}
+
+.reservation-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--color-info);
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: var(--transition-medium);
+}
+
+.reservation-item:hover {
+    transform: translateX(6px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+}
+
+.reservation-item:hover::before {
+    transform: scaleY(1);
+}
+
+.reservation-date {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.reservation-status {
+    background: var(--color-info);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .detail-container {
+        padding: var(--spacing-lg);
+    }
+    
+    .detail-title {
+        font-size: 2.25rem;
+    }
+    
+    .detail-content {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+    
+    .espace-actions {
+        position: static;
+        order: -1;
+    }
+    
+    .reservation-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .reservation-status {
+        align-self: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    .detail-container {
+        padding: var(--spacing-md);
+    }
+    
+    .detail-header {
+        padding: var(--spacing-xl);
+    }
+    
+    .detail-title {
+        font-size: 1.875rem;
+    }
+    
+    .info-card,
+    .espace-actions,
+    .recent-reservations {
+        padding: var(--spacing-lg);
+    }
+    
+    .btn {
+        padding: var(--spacing-md);
+        font-size: 0.9rem;
+    }
+    
+    .btn-large {
+        padding: var(--spacing-lg);
+        font-size: 1rem;
+    }
+}
+
+/* Animations d'entrée */
+.info-card {
+    animation: slideInLeft 0.6s ease-out;
+    animation-fill-mode: both;
+}
+
+.info-card:nth-child(1) { animation-delay: 0.1s; }
+.info-card:nth-child(2) { animation-delay: 0.2s; }
+
+.espace-actions {
+    animation: slideInRight 0.6s ease-out 0.3s;
+    animation-fill-mode: both;
+}
+
+@keyframes slideInLeft {
+    0% {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    0% {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* États de focus pour l'accessibilité */
+.btn:focus-visible,
+.reservation-item:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+/* Optimisation des performances */
+.info-card,
+.espace-actions,
+.reservation-item,
+.btn {
+    will-change: transform;
+}
+
+/* Statuts spécifiques des réservations */
+.reservation-status.confirmee {
+    background: var(--color-success);
+}
+
+.reservation-status.en_attente {
+    background: var(--color-warning);
+}
+
+.reservation-status.annulee {
+    background: var(--color-error);
+}
+
+/* Mode sombre (optionnel) */
+@media (prefers-color-scheme: dark) {
+    .detail-container {
+        background: #0F172A;
+    }
+    
+    .detail-header,
+    .info-card,
+    .espace-actions,
+    .recent-reservations {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    
+    .reservation-item {
+        background: #334155;
+        border-color: #475569;
+    }
+    
+    .equipements-text {
+        background: #1E293B;
+    }
+}
+
+
+@media (max-width: 768px) { /* cible les écrans ≤ 768px, typiquement tablettes et mobiles */
+     #espace-detail.detail-container {
+        margin-top: 20rem; /* ou la valeur que tu veux pour mobile */
+    }
+}
+</style>
+<div id="espace-detail" class="detail-container">
+    <div class="detail-header">
+        <h1 class="detail-title">{{ espace.nom }}</h1>
+        <span class="espace-type">{{ espace.type_espace }}</span>
+    </div>
+
+    <div class="detail-content">
+        <div class="espace-info">
+            <div class="info-card">
+                <h3 class="info-title">Informations</h3>
+                <ul class="info-list">
+                    <li>Capacité: {{ espace.capacite }} personnes</li>
+                    <li>Prix: {{ espace.prix_heure }}€/heure</li>
+                    <li>Statut: {% if espace.disponible %}Disponible{% else %}Indisponible{% endif %}</li>
+                </ul>
+            </div>
+
+            {% if espace.equipements %}
+                <div class="info-card">
+                    <h3 class="info-title">Équipements</h3>
+                    <p class="equipements-text">{{ espace.equipements }}</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="espace-actions">
+            {% if user.is_authenticated and espace.disponible %}
+                <a href="{% url 'reserver_espace_direct' espace.id %}" class="btn btn-primary btn-large">Réserver cet espace</a>
+            {% elif not user.is_authenticated %}
+                <p class="auth-required">Connectez-vous pour réserver cet espace</p>
+                <a href="{% url 'login' %}" class="btn btn-primary">Se connecter</a>
+            {% endif %}
+            <a href="{% url 'liste_espaces' %}" class="btn btn-outline">Retour aux espaces</a>
+        </div>
+    </div>
+
+    {% if reservations_recentes %}
+        <div class="recent-reservations">
+            <h3 class="section-title">Réservations à venir</h3>
+            <div class="reservations-list">
+                {% for reservation in reservations_recentes %}
+                    <div class="reservation-item">
+                        <p class="reservation-date">{{ reservation.date_debut|date:"d/m/Y H:i" }} - {{ reservation.date_fin|date:"H:i" }}</p>
+                        <span class="reservation-status">{{ reservation.get_statut_display }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

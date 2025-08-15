@@ -1,0 +1,304 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}{{ action }} une Facture - Administration{% endblock %}
+
+{% block page_title %}{{ action }} une Facture{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'liste_factures_admin' %}">Factures</a></li>
+        <li class="breadcrumb-item active">{{ action }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group me-2">
+    <a href="{% url 'liste_factures_admin' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour à la liste
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card" id="form-facture-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-receipt me-2"></i>{{ action }} une facture
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="facture-form" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Sélection du membre -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.membre.id_for_label }}" class="form-label">
+                                    <i class="bi bi-person me-1"></i>Membre *
+                                </label>
+                                <select class="form-select" name="{{ form.membre.name }}" id="{{ form.membre.id_for_label }}" required>
+                                    <option value="">Sélectionner un membre...</option>
+                                    {% for choice in form.membre.field.choices %}
+                                    <option value="{{ choice.0 }}" {% if choice.0 == form.membre.value %}selected{% endif %}>
+                                        {{ choice.1 }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.membre.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.membre.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Date d'échéance -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date_echeance.id_for_label }}" class="form-label">
+                                    <i class="bi bi-calendar me-1"></i>Date d'échéance *
+                                </label>
+                                <input type="datetime-local" 
+                                       class="form-control {% if form.date_echeance.errors %}is-invalid{% endif %}" 
+                                       name="{{ form.date_echeance.name }}" 
+                                       id="{{ form.date_echeance.id_for_label }}"
+                                       value="{{ form.date_echeance.value|default:'' }}"
+                                       required>
+                                {% if form.date_echeance.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.date_echeance.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Montant total -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.montant_total.id_for_label }}" class="form-label">
+                                    <i class="bi bi-currency-dollar me-1"></i>Montant total (DH) *
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" 
+                                           step="0.01" 
+                                           min="0"
+                                           class="form-control {% if form.montant_total.errors %}is-invalid{% endif %}" 
+                                           name="{{ form.montant_total.name }}" 
+                                           id="{{ form.montant_total.id_for_label }}"
+                                           value="{{ form.montant_total.value|default:'' }}"
+                                           placeholder="0.00"
+                                           required>
+                                    <span class="input-group-text">DH</span>
+                                    {% if form.montant_total.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.montant_total.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Statut -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.statut.id_for_label }}" class="form-label">
+                                    <i class="bi bi-flag me-1"></i>Statut
+                                </label>
+                                <select class="form-select" name="{{ form.statut.name }}" id="{{ form.statut.id_for_label }}">
+                                    {% for choice in form.statut.field.choices %}
+                                    <option value="{{ choice.0 }}" {% if choice.0 == form.statut.value %}selected{% endif %}>
+                                        {{ choice.1 }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.statut.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.statut.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Réservation associée (optionnelle) -->
+                        <div class="mb-3">
+                            <label for="{{ form.reservation.id_for_label }}" class="form-label">
+                                <i class="bi bi-calendar-check me-1"></i>Réservation associée (optionnelle)
+                            </label>
+                            <select class="form-select" name="{{ form.reservation.name }}" id="{{ form.reservation.id_for_label }}">
+                                <option value="">Aucune réservation...</option>
+                                {% for choice in form.reservation.field.choices %}
+                                <option value="{{ choice.0 }}" {% if choice.0 == form.reservation.value %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.reservation.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.reservation.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Si vous associez une réservation, le montant peut être calculé automatiquement.
+                            </div>
+                        </div>
+
+                        <!-- Aperçu des informations -->
+                        <div class="card mb-3" id="apercu-facture" style="display: none;">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-eye me-2"></i>Aperçu de la facture
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="apercu-content">
+                                    <!-- Contenu généré par JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <button type="button" class="btn btn-outline-info" id="btn-apercu">
+                                    <i class="bi bi-eye"></i> Aperçu
+                                </button>
+                                {% if action == 'Modifier' %}
+                                <button type="button" class="btn btn-outline-warning" id="btn-calculer-montant">
+                                    <i class="bi bi-calculator"></i> Recalculer montant
+                                </button>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <a href="{% url 'liste_factures_admin' %}" class="btn btn-secondary">
+                                    <i class="bi bi-x"></i> Annuler
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> {{ action }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('facture-form');
+    const membreSelect = document.getElementById('{{ form.membre.id_for_label }}');
+    const reservationSelect = document.getElementById('{{ form.reservation.id_for_label }}');
+    const montantInput = document.getElementById('{{ form.montant_total.id_for_label }}');
+    const apercuCard = document.getElementById('apercu-facture');
+    const apercuContent = document.getElementById('apercu-content');
+    const btnApercu = document.getElementById('btn-apercu');
+    const btnCalculer = document.getElementById('btn-calculer-montant');
+
+    // Filtrer les réservations par membre
+    membreSelect.addEventListener('change', function() {
+        const membreId = this.value;
+        if (membreId) {
+            // Ici vous pouvez ajouter un appel AJAX pour filtrer les réservations
+            // du membre sélectionné
+            console.log('Membre sélectionné:', membreId);
+        } else {
+            // Réinitialiser la liste des réservations
+            reservationSelect.innerHTML = '<option value="">Aucune réservation...</option>';
+        }
+    });
+
+    // Calculer automatiquement le montant basé sur la réservation
+    reservationSelect.addEventListener('change', function() {
+        const reservationId = this.value;
+        if (reservationId && btnCalculer) {
+            btnCalculer.style.display = 'inline-block';
+        }
+    });
+
+    // Recalculer le montant
+    if (btnCalculer) {
+        btnCalculer.addEventListener('click', function() {
+            const reservationId = reservationSelect.value;
+            if (reservationId) {
+                // Ici vous pouvez ajouter un appel AJAX pour calculer le montant
+                // basé sur la réservation sélectionnée
+                console.log('Calcul du montant pour la réservation:', reservationId);
+            }
+        });
+    }
+
+    // Aperçu de la facture
+    btnApercu.addEventListener('click', function() {
+        const membre = membreSelect.options[membreSelect.selectedIndex]?.text || 'Non sélectionné';
+        const dateEcheance = document.getElementById('{{ form.date_echeance.id_for_label }}').value;
+        const montant = montantInput.value || '0.00';
+        const statut = document.getElementById('{{ form.statut.id_for_label }}').options[document.getElementById('{{ form.statut.id_for_label }}').selectedIndex].text;
+        const reservation = reservationSelect.options[reservationSelect.selectedIndex]?.text || 'Aucune';
+
+        apercuContent.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Membre :</strong> ${membre}</p>
+                    <p><strong>Date d'échéance :</strong> ${dateEcheance ? new Date(dateEcheance).toLocaleDateString('fr-FR') : 'Non définie'}</p>
+                    <p><strong>Montant :</strong> ${montant} DH</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Statut :</strong> ${statut}</p>
+                    <p><strong>Réservation :</strong> ${reservation}</p>
+                    <p><strong>Numéro :</strong> <em>Généré automatiquement</em></p>
+                </div>
+            </div>
+        `;
+
+        if (apercuCard.style.display === 'none') {
+            apercuCard.style.display = 'block';
+            btnApercu.innerHTML = '<i class="bi bi-eye-slash"></i> Masquer aperçu';
+        } else {
+            apercuCard.style.display = 'none';
+            btnApercu.innerHTML = '<i class="bi bi-eye"></i> Aperçu';
+        }
+    });
+
+    // Validation du formulaire
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Vérifier les champs requis
+        const requiredFields = form.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        // Vérifier que le montant est positif
+        if (parseFloat(montantInput.value) <= 0) {
+            montantInput.classList.add('is-invalid');
+            isValid = false;
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        form.classList.add('was-validated');
+    });
+
+    // Supprimer les classes d'erreur lors de la saisie
+    form.querySelectorAll('input, select').forEach(field => {
+        field.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+    });
+});
+</script>
+{% endblock %}

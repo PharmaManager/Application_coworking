@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Espace Coworking{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+</head>
+<body>
+    <nav id="navbar" class="navbar">
+        <div class="nav-container" >
+            <a href="{% url 'accueil' %}" class="nav-logo">CoWork</a>
+            
+            <ul class="nav-menu">
+                <li><a href="{% url 'accueil' %}" class="nav-link">Accueil</a></li>
+                <li><a href="{% url 'liste_espaces' %}" class="nav-link">Espaces</a></li>
+                <li><a href="{% url 'liste_evenements' %}" class="nav-link">Événements</a></li>
+                
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a></li>
+                    <li><a href="{% url 'mes_reservations' %}" class="nav-link">Mes Réservations</a></li>
+                    
+                    {% if user.is_staff %}
+                        <li class="nav-dropdown">
+                            <a href="#" class="nav-link">Gestion</a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'liste_membres_admin' %}">Membres</a></li>
+                                <li><a href="{% url 'liste_reservations_admin' %}">Réservations</a></li>
+                                <li><a href="{% url 'liste_evenements_admin' %}">Événements</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                    
+                    <li><a href="{% url 'logout' %}" class="nav-link btn-logout">Déconnexion</a></li>
+                    <span class="nav-user">{{ user.username }}</span>
+                {% else %}
+                    <li><a href="{% url 'login' %}" class="nav-link btn-login">Connexion</a></li>
+                    <li><a href="{% url 'inscription' %}" class="nav-link btn-register">S'inscrire</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% if messages %}
+            <div id="messages" class="messages-container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer id="footer" class="footer">
+        <div class="footer-content">
+            <p>&copy; 2025 Espace Coworking. Tous droits réservés.</p>
+        </div>
+    </footer>
+</body>
+</html>

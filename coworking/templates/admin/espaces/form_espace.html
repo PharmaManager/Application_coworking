@@ -1,0 +1,346 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}{{ action }} un espace - Administration{% endblock %}
+
+{% block page_title %}{{ action }} un espace de travail{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'liste_espaces_admin' %}">Espaces</a></li>
+        {% if espace %}
+            <li class="breadcrumb-item"><a href="{% url 'detail_espace_admin' espace.id %}">{{ espace.nom }}</a></li>
+        {% endif %}
+        <li class="breadcrumb-item active" aria-current="page">{{ action }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group me-2">
+    {% if espace %}
+        <a href="{% url 'detail_espace_admin' espace.id %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour au détail
+        </a>
+    {% else %}
+        <a href="{% url 'liste_espaces_admin' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour à la liste
+        </a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card" id="form-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-{% if espace %}pencil{% else %}plus-circle{% endif %} me-2"></i>
+                    {{ action }} un espace de travail
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="espace-form" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Informations générales -->
+                    <div class="form-section mb-4" id="section-general">
+                        <h6 class="form-section-title">
+                            <i class="bi bi-info-circle me-2"></i>Informations générales
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.nom.id_for_label }}" class="form-label required">
+                                        Nom de l'espace
+                                    </label>
+                                    {{ form.nom }}
+                                    {% if form.nom.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.nom.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        Nom unique et descriptif de l'espace de travail
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.type_espace.id_for_label }}" class="form-label required">
+                                        Type d'espace
+                                    </label>
+                                    {{ form.type_espace }}
+                                    {% if form.type_espace.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.type_espace.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Capacité et tarification -->
+                    <div class="form-section mb-4" id="section-capacite">
+                        <h6 class="form-section-title">
+                            <i class="bi bi-people me-2"></i>Capacité et tarification
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.capacite.id_for_label }}" class="form-label required">
+                                        Capacité
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.capacite }}
+                                        <span class="input-group-text">personne(s)</span>
+                                    </div>
+                                    {% if form.capacite.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.capacite.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.prix_heure.id_for_label }}" class="form-label required">
+                                        Prix par heure
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.prix_heure }}
+                                        <span class="input-group-text">MAD</span>
+                                    </div>
+                                    {% if form.prix_heure.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.prix_heure.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Équipements -->
+                    <div class="form-section mb-4" id="section-equipements">
+                        <h6 class="form-section-title">
+                            <i class="bi bi-tools me-2"></i>Équipements
+                        </h6>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.equipements.id_for_label }}" class="form-label">
+                                Liste des équipements
+                            </label>
+                            {{ form.equipements }}
+                            {% if form.equipements.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.equipements.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Décrivez les équipements disponibles (WiFi, écran, tableau blanc, etc.)
+                            </div>
+                        </div>
+                        
+                        <!-- Suggestions d'équipements -->
+                        <div class="equipements-suggestions">
+                            <small class="text-muted">Suggestions :</small>
+                            <div class="suggestions-container mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary suggestion-btn">WiFi</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary suggestion-btn">Écran</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary suggestion-btn">Tableau blanc</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary suggestion-btn">Projecteur</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary suggestion-btn">Imprimante</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary suggestion-btn">Climatisation</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary suggestion-btn">Café/Thé</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Disponibilité -->
+                    <div class="form-section mb-4" id="section-disponibilite">
+                        <h6 class="form-section-title">
+                            <i class="bi bi-toggle-on me-2"></i>Disponibilité
+                        </h6>
+                        
+                        <div class="form-check">
+                            {{ form.disponible }}
+                            <label class="form-check-label" for="{{ form.disponible.id_for_label }}">
+                                Espace disponible à la réservation
+                            </label>
+                            {% if form.disponible.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.disponible.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Boutons d'action -->
+                    <div class="form-actions mt-4 pt-4 border-top" id="form-actions">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-primary btn-lg" id="btn-submit">
+                                    <i class="bi bi-check-lg me-2"></i>{{ action }} l'espace
+                                </button>
+                                {% if espace %}
+                                <button type="button" class="btn btn-outline-secondary ms-2" id="btn-reset">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>Réinitialiser
+                                </button>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 text-end">
+                                {% if espace %}
+                                    <a href="{% url 'detail_espace_admin' espace.id %}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-x-lg me-2"></i>Annuler
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'liste_espaces_admin' %}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-x-lg me-2"></i>Annuler
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('espace-form');
+    const submitBtn = document.getElementById('btn-submit');
+    const resetBtn = document.getElementById('btn-reset');
+    const equipementsField = document.getElementById('{{ form.equipements.id_for_label }}');
+    
+    // Validation du formulaire
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            // Validation des champs requis
+            const requiredFields = form.querySelectorAll('[required]');
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                    field.classList.add('is-valid');
+                }
+            });
+            
+            // Validation du prix (doit être positif)
+            const prixField = document.getElementById('{{ form.prix_heure.id_for_label }}');
+            if (prixField && prixField.value && parseFloat(prixField.value) <= 0) {
+                prixField.classList.add('is-invalid');
+                isValid = false;
+            }
+            
+            // Validation de la capacité (doit être positive)
+            const capaciteField = document.getElementById('{{ form.capacite.id_for_label }}');
+            if (capaciteField && capaciteField.value && parseInt(capaciteField.value) <= 0) {
+                capaciteField.classList.add('is-invalid');
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                // Afficher un message d'erreur
+                const firstInvalid = form.querySelector('.is-invalid');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else {
+                // Animation du bouton de soumission
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Enregistrement...';
+                submitBtn.disabled = true;
+            }
+        });
+    }
+    
+    // Bouton de réinitialisation
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            if (confirm('Êtes-vous sûr de vouloir réinitialiser le formulaire ?')) {
+                form.reset();
+                // Supprimer les classes de validation
+                form.querySelectorAll('.is-valid, .is-invalid').forEach(field => {
+                    field.classList.remove('is-valid', 'is-invalid');
+                });
+            }
+        });
+    }
+    
+    // Suggestions d'équipements
+    const suggestionBtns = document.querySelectorAll('.suggestion-btn');
+    if (equipementsField && suggestionBtns.length > 0) {
+        suggestionBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const suggestion = this.textContent;
+                const currentValue = equipementsField.value;
+                
+                // Vérifier si la suggestion n'est pas déjà présente
+                if (!currentValue.includes(suggestion)) {
+                    const separator = currentValue && !currentValue.endsWith('\n') ? '\n' : '';
+                    equipementsField.value = currentValue + separator + suggestion;
+                    equipementsField.focus();
+                }
+                
+                // Animation du bouton
+                this.classList.add('btn-success');
+                this.innerHTML = '<i class="bi bi-check"></i> ' + suggestion;
+                setTimeout(() => {
+                    this.classList.remove('btn-success');
+                    this.innerHTML = suggestion;
+                }, 1000);
+            });
+        });
+    }
+    
+    // Validation en temps réel
+    const inputs = form.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.hasAttribute('required') && !this.value.trim()) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            } else if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid') && this.value.trim()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    });
+    
+    // Animation des sections
+    const sections = document.querySelectorAll('.form-section');
+    sections.forEach((section, index) => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            section.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            section.style.opacity = '1';
+            section.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

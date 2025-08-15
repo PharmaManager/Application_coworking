@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choisir Paiement</title>
+</head>
+<body>
+    <h2>Choisir ce que vous voulez payer</h2>
+
+    <div id="paiement-reservation">
+        <h3>Vos réservations en attente</h3>
+        {% if reservations %}
+            <ul>
+                {% for res in reservations %}
+                <li>
+                    {{ res.espace.nom }} - {{ res.date_debut|date:"d/m/Y H:i" }} 
+                    <a href="{% url 'page_paiement' %}?type=reservation&id={{ res.id }}">Payer cette réservation</a>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Aucune réservation en attente.</p>
+        {% endif %}
+    </div>
+
+    <div id="paiement-abonnement">
+        <h3>Payer votre abonnement actuel</h3>
+        <p>Type d'abonnement : {{ profil.get_type_abonnement_display }}</p>
+        <a href="{% url 'page_paiement' %}?type=abonnement">Payer mon abonnement</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,364 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Types d'espaces - Administration{% endblock %}
+
+{% block page_title %}Gestion des types d'espaces{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'liste_espaces_admin' %}">Espaces</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Types d'espaces</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group me-2">
+    <a href="{% url 'creer_type_espace_admin' %}" class="btn btn-sm btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouveau type
+    </a>
+    <a href="{% url 'liste_espaces_admin' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour aux espaces
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Statistiques rapides -->
+<div class="row mb-4" id="stats-overview">
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <div class="stat-number">{{ types_espaces|length }}</div>
+                <div class="stat-label">Types d'espaces</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <div class="stat-number">
+                    {% for type_espace in types_espaces %}
+                        {% if forloop.first %}{{ type_espace.nb_espaces }}{% endif %}
+                    {% empty %}0{% endfor %}
+                </div>
+                <div class="stat-label">Espaces actifs</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des types d'espaces -->
+<div class="card" id="types-list-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-tags me-2"></i>Liste des types d'espaces
+        </h5>
+        <div class="card-actions">
+            <button class="btn btn-sm btn-outline-secondary" id="btn-search-toggle">
+                <i class="bi bi-search"></i> Rechercher
+            </button>
+        </div>
+    </div>
+    
+    <!-- Barre de recherche -->
+    <div class="card-body border-bottom d-none" id="search-container">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control" id="search-input" placeholder="Rechercher par nom ou description...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-outline-secondary" id="btn-clear-search">
+                    <i class="bi bi-x-circle"></i> Effacer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body">
+        {% if types_espaces %}
+            <div class="table-responsive">
+                <table class="table table-hover" id="types-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nom</th>
+                            <th>Description</th>
+                            <th class="text-center">Espaces associés</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="types-tbody">
+                        {% for type_espace in types_espaces %}
+                        <tr class="type-row" data-search="{{ type_espace.nom|lower }} {{ type_espace.description|lower }}">
+                            <td>
+                                <div class="type-name">
+                                    <strong>{{ type_espace.nom }}</strong>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="type-description">
+                                    {% if type_espace.description %}
+                                        <span class="text-muted">
+                                            {{ type_espace.description|truncatechars:80 }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted fst-italic">Pas de description</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-info espaces-count">
+                                    {{ type_espace.nb_espaces }} espace{{ type_espace.nb_espaces|pluralize }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm action-buttons">
+                                    <a href="{% url 'modifier_type_espace_admin' type_espace.id %}" 
+                                       class="btn btn-outline-primary" 
+                                       title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'liste_espaces_admin' %}?type={{ type_espace.id }}" 
+                                       class="btn btn-outline-info" 
+                                       title="Voir les espaces">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if type_espace.nb_espaces == 0 %}
+                                    <button class="btn btn-outline-danger btn-delete" 
+                                            data-type-id="{{ type_espace.id }}"
+                                            data-type-name="{{ type_espace.nom }}"
+                                            title="Supprimer">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+
+                                 <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const deleteButtons = document.querySelectorAll('.btn-delete');
+                                        const deleteModal = document.getElementById('deleteModal');
+                                        const typeNameSpan = document.getElementById('type-name-to-delete');
+                                        const confirmDeleteBtn = document.getElementById('confirm-delete');
+                                        let typeToDelete = null;
+
+                                        deleteButtons.forEach(btn => {
+                                            btn.addEventListener('click', function() {
+                                                typeToDelete = {
+                                                    id: this.dataset.typeId,
+                                                    name: this.dataset.typeName
+                                                };
+                                                typeNameSpan.textContent = typeToDelete.name;
+                                                new bootstrap.Modal(deleteModal).show();
+                                            });
+                                        });
+
+                                        function getCookie(name) {
+                                            let cookieValue = null;
+                                            if (document.cookie && document.cookie !== '') {
+                                                const cookies = document.cookie.split(';');
+                                                for (let cookie of cookies) {
+                                                    cookie = cookie.trim();
+                                                    if (cookie.startsWith(name + '=')) {
+                                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            return cookieValue;
+                                        }
+                                        const csrftoken = getCookie('csrftoken');
+
+                                        confirmDeleteBtn.addEventListener('click', function() {
+                                            if (!typeToDelete) return;
+
+                                            const url = `{% url 'supprimer_type_espace_admin' 0 %}`.replace('/0/', `/${typeToDelete.id}/`);
+
+                                            fetch(url, {
+                                                method: 'POST',
+                                                headers: {
+                                                    'X-CSRFToken': csrftoken,
+                                                    'Content-Type': 'application/json'
+                                                },
+                                            })
+                                            .then(res => {
+                                                if (!res.ok) throw new Error('Erreur réseau: ' + res.status);
+                                                return res.json();
+                                            })
+                                            .then(data => {
+                                                if (data.success) {
+                                                    const row = document.querySelector(`[data-type-id="${typeToDelete.id}"]`);
+                                                    if (row) row.remove();
+                                                    bootstrap.Modal.getInstance(deleteModal).hide();
+
+                                                    const alert = document.createElement('div');
+                                                    alert.className = 'alert alert-success alert-dismissible fade show';
+                                                    alert.innerHTML = `Type d'espace supprimé avec succès.<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+                                                    document.body.prepend(alert);
+                                                    setTimeout(() => { if (alert.parentNode) alert.remove(); }, 5000);
+
+                                                    typeToDelete = null;
+                                                } else {
+                                                    alert('Erreur : ' + (data.error || 'Impossible de supprimer le type.'));
+                                                }
+                                            })
+                                            .catch(err => alert(err));
+                                        });
+                                    });
+
+                                    </script>
+
+
+                                    {% else %}
+                                    <button class="btn btn-outline-secondary" 
+                                            disabled
+                                            title="Impossible de supprimer (espaces associés)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Résultats de recherche -->
+            <div class="d-none" id="no-results">
+                <div class="text-center py-4">
+                    <i class="bi bi-search display-4 text-muted"></i>
+                    <h5 class="mt-3">Aucun résultat trouvé</h5>
+                    <p class="text-muted">Essayez avec d'autres mots-clés</p>
+                </div>
+            </div>
+
+        {% else %}
+            <div class="text-center py-5" id="empty-state">
+                <i class="bi bi-tags display-1 text-muted"></i>
+                <h4 class="mt-3">Aucun type d'espace</h4>
+                <p class="text-muted mb-4">Commencez par créer votre premier type d'espace</p>
+                <a href="{% url 'creer_type_espace_admin' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Créer un type d'espace
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                    Confirmer la suppression
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer le type d'espace <strong id="type-name-to-delete"></strong> ?</p>
+                <p class="text-muted">Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">
+                    <i class="bi bi-trash me-2"></i>Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchToggle = document.getElementById('btn-search-toggle');
+    const searchContainer = document.getElementById('search-container');
+    const searchInput = document.getElementById('search-input');
+    const clearSearch = document.getElementById('btn-clear-search');
+    const typeRows = document.querySelectorAll('.type-row');
+    const noResults = document.getElementById('no-results');
+    const tbody = document.getElementById('types-tbody');
+    
+    // Toggle de la barre de recherche
+    if (searchToggle && searchContainer) {
+        searchToggle.addEventListener('click', function() {
+            searchContainer.classList.toggle('d-none');
+            if (!searchContainer.classList.contains('d-none')) {
+                searchInput.focus();
+            }
+        });
+    }
+    
+    // Fonctionnalité de recherche
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            let visibleRows = 0;
+            
+            typeRows.forEach(row => {
+                const searchData = row.getAttribute('data-search');
+                const isVisible = !query || searchData.includes(query);
+                
+                row.style.display = isVisible ? '' : 'none';
+                if (isVisible) visibleRows++;
+            });
+            
+            // Afficher/masquer le message "aucun résultat"
+            if (noResults) {
+                noResults.classList.toggle('d-none', visibleRows > 0 || !query);
+            }
+        });
+    }
+
+
+    
+    
+    // Effacer la recherche
+    if (clearSearch) {
+        clearSearch.addEventListener('click', function() {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+            searchInput.focus();
+        });
+    }
+   
+    // Animation au hover sur les cartes de statistiques
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.transition = 'transform 0.2s ease';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // Tooltips pour les boutons d'action
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Animation d'apparition des lignes
+    typeRows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(10px)';
+        setTimeout(() => {
+            row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, index * 50);
+    });
+});
+</script>
+{% endblock %}

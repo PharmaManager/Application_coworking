@@ -1,0 +1,507 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Liste des factures - Administration{% endblock %}
+
+{% block page_title %}Gestion des factures{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb" class="breadcrumb-nav">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Factures</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group me-2">
+    <a href="{% url 'creer_facture_admin' %}" class="btn btn-sm btn-primary">
+        <i class="bi bi-plus"></i> Créer une facture
+    </a>
+    <button class="btn btn-sm btn-outline-success btn-export-factures">
+        <i class="bi bi-download"></i> Exporter
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Statistiques en haut -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-icon text-primary mb-2">
+                    <i class="bi bi-receipt display-6"></i>
+                </div>
+                <h5 class="stats-number">{{ factures.count }}</h5>
+                <p class="stats-label text-muted mb-0">Total factures</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-icon text-success mb-2">
+                    <i class="bi bi-check-circle display-6"></i>
+                </div>
+                <h5 class="stats-number" id="factures-payees">0</h5>
+                <p class="stats-label text-muted mb-0">Payées</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-icon text-warning mb-2">
+                    <i class="bi bi-clock display-6"></i>
+                </div>
+                <h5 class="stats-number" id="factures-attente">0</h5>
+                <p class="stats-label text-muted mb-0">En attente</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-icon text-danger mb-2">
+                    <i class="bi bi-exclamation-triangle display-6"></i>
+                </div>
+                <h5 class="stats-number" id="factures-retard">0</h5>
+                <p class="stats-label text-muted mb-0">En retard</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres et recherche -->
+<div class="card shadow-sm mb-4 filters-card">
+    <div class="card-body">
+        <form method="get" class="filters-form" id="filters-form">
+            <div class="row align-items-end">
+                <div class="col-md-3">
+                    <label for="search-factures" class="form-label">Rechercher</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="search-factures" 
+                               placeholder="Numéro, membre...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label for="statut-filter" class="form-label">Statut</label>
+                    <select name="statut" id="statut-filter" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        {% for key, value in statuts %}
+                        <option value="{{ key }}" {% if request.GET.statut == key %}selected{% endif %}>
+                            {{ value }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="date-from" class="form-label">Du</label>
+                    <input type="date" class="form-control" id="date-from" name="date_from" 
+                           value="{{ request.GET.date_from }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="date-to" class="form-label">Au</label>
+                    <input type="date" class="form-control" id="date-to" name="date_to" 
+                           value="{{ request.GET.date_to }}">
+                </div>
+                <div class="col-md-2">
+                    <div class="btn-group w-100">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-funnel"></i> Filtrer
+                        </button>
+                        <a href="{% url 'liste_factures_admin' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des factures -->
+<div class="card shadow-sm factures-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="card-title mb-0">
+            <i class="bi bi-list"></i> Liste des factures
+            <span class="badge bg-secondary ms-2 results-count">{{ factures.count }} résultat(s)</span>
+        </h6>
+        <div class="card-actions">
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary btn-view-mode active" data-view="table">
+                    <i class="bi bi-table"></i>
+                </button>
+                <button class="btn btn-outline-secondary btn-view-mode" data-view="cards">
+                    <i class="bi bi-grid"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if factures %}
+            <!-- Vue tableau -->
+            <div class="table-view" id="table-view">
+                <div class="table-responsive">
+                    <table class="table table-hover factures-table" id="factures-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="form-check-input select-all-factures" 
+                                           id="select-all">
+                                </th>
+                                <th class="sortable" data-sort="numero">
+                                    Numéro <i class="bi bi-arrow-down-up"></i>
+                                </th>
+                                <th class="sortable" data-sort="membre">
+                                    Membre <i class="bi bi-arrow-down-up"></i>
+                                </th>
+                                <th class="sortable" data-sort="date_creation">
+                                    Date création <i class="bi bi-arrow-down-up"></i>
+                                </th>
+                                <th class="sortable" data-sort="date_echeance">
+                                    Échéance <i class="bi bi-arrow-down-up"></i>
+                                </th>
+                                <th class="sortable" data-sort="montant">
+                                    Montant <i class="bi bi-arrow-down-up"></i>
+                                </th>
+                                <th>Statut</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for facture in factures %}
+                            <tr class="facture-row" data-facture-id="{{ facture.id }}" 
+                                data-statut="{{ facture.statut }}" 
+                                data-membre="{{ facture.membre.get_full_name|default:facture.membre.username }}"
+                                data-numero="{{ facture.numero }}">
+                                <td>
+                                    <input type="checkbox" class="form-check-input select-facture" 
+                                           value="{{ facture.id }}">
+                                </td>
+                                <td>
+                                    <strong class="facture-numero">{{ facture.numero }}</strong>
+                                </td>
+                                <td>
+                                    <div class="membre-info">
+                                        <i class="bi bi-person-circle text-primary"></i>
+                                        <span class="membre-name">{{ facture.membre.get_full_name|default:facture.membre.username }}</span>
+                                    </div>
+                                    <small class="text-muted">{{ facture.membre.email }}</small>
+                                </td>
+                                <td class="date-creation">
+                                    {{ facture.date_creation|date:"d/m/Y H:i" }}
+                                </td>
+                                <td class="date-echeance">
+                                    {{ facture.date_echeance|date:"d/m/Y" }}
+                                    {% if facture.date_echeance < today and facture.statut != 'payee' %}
+                                        <small class="text-danger"><i class="bi bi-exclamation-triangle"></i> Échue</small>
+                                    {% endif %}
+                                </td>
+                                <td class="montant-total">
+                                    <strong>{{ facture.montant_total }} €</strong>
+                                </td>
+                                <td>
+                                    {% if facture.statut == 'payee' %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Payée
+                                        </span>
+                                    {% elif facture.statut == 'en_attente' %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-clock"></i> En attente
+                                        </span>
+                                    {% elif facture.statut == 'en_retard' %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-exclamation-triangle"></i> En retard
+                                        </span>
+                                    {% elif facture.statut == 'annulee' %}
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-x-circle"></i> Annulée
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'detail_facture_admin' facture.id %}" 
+                                           class="btn btn-outline-info" 
+                                           data-bs-toggle="tooltip" title="Voir détails">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <button class="btn btn-outline-success btn-mark-paid" 
+                                                data-facture-id="{{ facture.id }}"
+                                                data-bs-toggle="tooltip" title="Marquer comme payée"
+                                                {% if facture.statut == 'payee' %}disabled{% endif %}>
+                                            <i class="bi bi-check"></i>
+                                        </button>
+                                        <button class="btn btn-outline-primary btn-send-reminder" 
+                                                data-facture-id="{{ facture.id }}"
+                                                data-bs-toggle="tooltip" title="Envoyer rappel">
+                                            <i class="bi bi-envelope"></i>
+                                        </button>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-secondary dropdown-toggle" 
+                                                    data-bs-toggle="dropdown">
+                                                <i class="bi bi-three-dots"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#">
+                                                    <i class="bi bi-download"></i> Télécharger PDF
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#">
+                                                    <i class="bi bi-envelope"></i> Envoyer par email
+                                                </a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="#">
+                                                    <i class="bi bi-trash"></i> Supprimer
+                                                </a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Vue cartes -->
+            <div class="cards-view d-none" id="cards-view">
+                <div class="row">
+                    {% for facture in factures %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card facture-card h-100" data-facture-id="{{ facture.id }}">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <strong class="facture-numero">{{ facture.numero }}</strong>
+                                {% if facture.statut == 'payee' %}
+                                    <span class="badge bg-success">Payée</span>
+                                {% elif facture.statut == 'en_attente' %}
+                                    <span class="badge bg-warning">En attente</span>
+                                {% elif facture.statut == 'en_retard' %}
+                                    <span class="badge bg-danger">En retard</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Annulée</span>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <div class="member-info mb-2">
+                                    <i class="bi bi-person-circle text-primary"></i>
+                                    <strong>{{ facture.membre.get_full_name|default:facture.membre.username }}</strong>
+                                </div>
+                                <div class="facture-details">
+                                    <div class="detail-row">
+                                        <small class="text-muted">Montant:</small>
+                                        <strong>{{ facture.montant_total }} €</strong>
+                                    </div>
+                                    <div class="detail-row">
+                                        <small class="text-muted">Création:</small>
+                                        <span>{{ facture.date_creation|date:"d/m/Y" }}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <small class="text-muted">Échéance:</small>
+                                        <span>{{ facture.date_echeance|date:"d/m/Y" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <div class="btn-group w-100">
+                                    <a href="{% url 'detail_facture_admin' facture.id %}" 
+                                       class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-eye"></i> Détails
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-success btn-mark-paid" 
+                                            data-facture-id="{{ facture.id }}"
+                                            {% if facture.statut == 'payee' %}disabled{% endif %}>
+                                        <i class="bi bi-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        {% else %}
+            <!-- État vide -->
+            <div class="empty-state text-center py-5">
+                <i class="bi bi-receipt text-muted display-1"></i>
+                <h5 class="text-muted mt-3">Aucune facture trouvée</h5>
+                <p class="text-muted">
+                    {% if request.GET %}
+                        Aucune facture ne correspond aux critères de recherche.
+                        <br><a href="{% url 'liste_factures_admin' %}" class="btn btn-outline-primary mt-2">
+                            <i class="bi bi-arrow-clockwise"></i> Réinitialiser les filtres
+                        </a>
+                    {% else %}
+                        Commencez par créer votre première facture.
+                        <br><a href="{% url 'creer_facture_admin' %}" class="btn btn-primary mt-2">
+                            <i class="bi bi-plus"></i> Créer une facture
+                        </a>
+                    {% endif %}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Actions en masse -->
+<div class="bulk-actions card mt-3 d-none" id="bulk-actions">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong id="selected-count">0</strong> facture(s) sélectionnée(s)
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-outline-success btn-bulk-mark-paid">
+                    <i class="bi bi-check-circle"></i> Marquer comme payées
+                </button>
+                <button class="btn btn-outline-primary btn-bulk-send-reminder">
+                    <i class="bi bi-envelope"></i> Envoyer rappels
+                </button>
+                <button class="btn btn-outline-secondary btn-bulk-export">
+                    <i class="bi bi-download"></i> Exporter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.getElementById('factures-table');
+    const searchInput = document.getElementById('search-factures');
+    const viewModeButtons = document.querySelectorAll('.btn-view-mode');
+    const tableView = document.getElementById('table-view');
+    const cardsView = document.getElementById('cards-view');
+    const selectAllCheckbox = document.getElementById('select-all');
+    const bulkActions = document.getElementById('bulk-actions');
+
+    // Calcul des statistiques
+    function calculateStats() {
+        const factures = document.querySelectorAll('.facture-row');
+        let payees = 0, attente = 0, retard = 0;
+        
+        factures.forEach(row => {
+            const statut = row.dataset.statut;
+            if (statut === 'payee') payees++;
+            else if (statut === 'en_attente') attente++;
+            else if (statut === 'en_retard') retard++;
+        });
+        
+        document.getElementById('factures-payees').textContent = payees;
+        document.getElementById('factures-attente').textContent = attente;
+        document.getElementById('factures-retard').textContent = retard;
+    }
+
+    // Recherche en temps réel
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.facture-row');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const numero = row.dataset.numero.toLowerCase();
+                const membre = row.dataset.membre.toLowerCase();
+                
+                if (numero.includes(searchTerm) || membre.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            document.querySelector('.results-count').textContent = visibleCount + ' résultat(s)';
+        });
+    }
+
+    // Changement de vue
+    viewModeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const view = this.dataset.view;
+            
+            viewModeButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            if (view === 'table') {
+                tableView.classList.remove('d-none');
+                cardsView.classList.add('d-none');
+            } else {
+                tableView.classList.add('d-none');
+                cardsView.classList.remove('d-none');
+            }
+        });
+    });
+
+    // Sélection multiple
+    const factureCheckboxes = document.querySelectorAll('.select-facture');
+    const selectedCount = document.getElementById('selected-count');
+
+    function updateBulkActions() {
+        const selected = document.querySelectorAll('.select-facture:checked').length;
+        selectedCount.textContent = selected;
+        
+        if (selected > 0) {
+            bulkActions.classList.remove('d-none');
+        } else {
+            bulkActions.classList.add('d-none');
+        }
+    }
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            factureCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateBulkActions();
+        });
+    }
+
+    factureCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateBulkActions);
+    });
+
+    // Actions sur les factures
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-mark-paid')) {
+            const factureId = e.target.closest('.btn-mark-paid').dataset.factureId;
+            // Ici vous pouvez ajouter l'appel AJAX pour marquer comme payée
+            console.log('Marquer facture payée:', factureId);
+        }
+        
+        if (e.target.closest('.btn-send-reminder')) {
+            const factureId = e.target.closest('.btn-send-reminder').dataset.factureId;
+            // Ici vous pouvez ajouter l'appel AJAX pour envoyer un rappel
+            console.log('Envoyer rappel:', factureId);
+        }
+    });
+
+    // Tri des colonnes
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.sortable')) {
+            const column = e.target.closest('.sortable');
+            const sortBy = column.dataset.sort;
+            
+            // Ici vous pouvez ajouter la logique de tri
+            console.log('Trier par:', sortBy);
+        }
+    });
+
+    // Export
+    document.querySelector('.btn-export-factures')?.addEventListener('click', function() {
+        // Logique d'export
+        console.log('Export factures');
+    });
+
+    // Initialisation
+    calculateStats();
+    updateBulkActions();
+});
+</script>
+{% endblock %}

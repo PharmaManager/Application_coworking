@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement {{ objet }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .payment-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .payment-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .payment-subtitle {
+            color: #7f8c8d;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .payment-details {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            color: #555;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #2c3e50;
+            font-weight: 700;
+        }
+
+        .amount {
+            font-size: 24px;
+            color: #27ae60;
+        }
+
+        .payment-methods {
+            margin-bottom: 30px;
+        }
+
+        .methods-title {
+            color: #555;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .payment-icons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .payment-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .payment-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .icon-symbol {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .icon-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .paypal { color: #0070ba; }
+        .visa { color: #1a1f71; }
+        .mastercard { color: #eb001b; }
+        .amex { color: #006fcf; }
+
+        .pay-button {
+            width: 100%;
+            padding: 18px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pay-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .pay-button:active {
+            transform: translateY(0);
+        }
+
+        .pay-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .pay-button:hover::before {
+            left: 100%;
+        }
+
+        .security-notice {
+            text-align: center;
+            margin-top: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+            font-style: italic;
+            padding: 15px;
+            background: rgba(255, 193, 7, 0.1);
+            border-radius: 8px;
+            border-left: 3px solid #ffc107;
+        }
+
+        .lock-icon {
+            margin-right: 8px;
+            color: #28a745;
+        }
+
+        @media (max-width: 480px) {
+            .payment-container {
+                padding: 25px;
+                margin: 10px;
+            }
+            
+            .payment-title {
+                font-size: 24px;
+            }
+            
+            .payment-icons {
+                gap: 15px;
+            }
+            
+            .payment-icon {
+                padding: 12px;
+            }
+            
+            .icon-symbol {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <div class="payment-header">
+            <h2 class="payment-title">Paiement {{ objet }}</h2>
+            <p class="payment-subtitle">Vous êtes sur le point de payer pour <strong>Coworking</strong></p>
+        </div>
+
+        <div class="payment-details">
+            <div class="detail-row">
+                <span class="detail-label">Service :</span>
+                <span class="detail-value">{{ nom }}</span>
+            </div>
+            {% if description %}
+            <div class="detail-row">
+                <span class="detail-label">Description:</span>&nbsp;&nbsp;&nbsp;
+                
+                <span class="detail-value">{{ description }}</span>
+            </div>
+            {% endif %}
+            <div class="detail-row">
+                <span class="detail-label">Montant à payer :</span>
+                <span class="detail-value amount">{{ montant }}</span>
+            </div>
+        </div>
+
+        <div class="payment-methods">
+            <h3 class="methods-title">Méthodes de paiement acceptées</h3>
+            <div class="payment-icons">
+                <div class="payment-icon">
+                    <div class="icon-symbol paypal">💳</div>
+                    <div class="icon-label">PayPal</div>
+                </div>
+                <div class="payment-icon">
+                    <div class="icon-symbol visa">💳</div>
+                    <div class="icon-label">Visa</div>
+                </div>
+                <div class="payment-icon">
+                    <div class="icon-symbol mastercard">💳</div>
+                    <div class="icon-label">Mastercard</div>
+                </div>
+                <div class="payment-icon">
+                    <div class="icon-symbol amex">💳</div>
+                    <div class="icon-label">Amex</div>
+                </div>
+            </div>
+        </div>
+
+        <button class="pay-button" onclick="simulatePayment()">
+            🔒 Payer maintenant
+        </button>
+
+        <div class="security-notice">
+            <span class="lock-icon">🔒</span>
+            <strong>Simulation seulement</strong> - Aucune transaction réelle n'est effectuée
+        </div>
+    </div>
+
+    <script>
+        function simulatePayment() {
+            const button = document.querySelector('.pay-button');
+            const originalText = button.textContent;
+            
+            button.textContent = '⏳ Traitement en cours...';
+            button.disabled = true;
+            button.style.opacity = '0.7';
+            
+            setTimeout(() => {
+                alert('✅ Simulation de paiement réussie !\n\nAucune transaction réelle n\'a été effectuée.\nCeci est uniquement à des fins de démonstration.');
+                button.textContent = originalText;
+                button.disabled = false;
+                button.style.opacity = '1';
+            }, 2000);
+        }
+
+        // Animation des icônes au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            const icons = document.querySelectorAll('.payment-icon');
+            icons.forEach((icon, index) => {
+                icon.style.animation = `slideUp 0.6s ease-out ${index * 0.1}s both`;
+            });
+        });
+    </script>
+</body>
+</html>

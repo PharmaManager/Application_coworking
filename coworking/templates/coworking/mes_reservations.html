@@ -1,0 +1,679 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Réservations{% endblock %}
+
+{% block content %}
+<style>
+/* Variables de couleur (reprises de votre palette) */
+:root {
+    /* Couleurs principales */
+    --color-primary: #1E3A8A; /* Bleu profond, sérieux et professionnel */
+    --color-secondary: #64748B; /* Gris-bleu, pour les textes ou éléments secondaires */
+    --color-accent: #F59E0B; /* Jaune/orangé, pour les boutons ou alertes */
+    --color-background: #F8FAFC; /* Très clair, pour le fond des pages */
+    --color-surface: #FFFFFF; /* Blanc pour cartes et sections */
+    --color-success: #16A34A; /* Vert pour succès */
+    --color-error: #DC2626; /* Rouge pour erreurs */
+    --color-warning: #FBBF24; /* Jaune pour alertes */
+    --color-info: #0EA5E9; /* Bleu clair pour infos */
+    
+    /* Textes */
+    --text-primary: #111827; /* Noir-gris foncé pour texte principal */
+    --text-secondary: #475569; /* Gris pour texte secondaire */
+    
+    /* États des réservations */
+    --status-confirme: #16A34A;
+    --status-en-attente: #F59E0B;
+    --status-annulee: #DC2626;
+    --status-terminee: #64748B;
+    
+    /* Ombres et effets */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    
+    /* Bordures et espacements */
+    --border-radius: 8px;
+    --border-radius-lg: 12px;
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+}
+
+/* Page container */
+#reservations-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--color-background) 0%, #e2e8f0 100%);
+    padding: var(--spacing-xl) var(--spacing-md);
+}
+
+.page-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Header de la page */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-2xl);
+    padding: var(--spacing-xl) 0;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    margin: 0;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.page-title::before {
+    content: '📋';
+    font-size: 2.5rem;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+/* Container des réservations */
+.reservations-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+/* Cartes des réservations */
+.reservation-card {
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    position: relative;
+    background: linear-gradient(145deg, var(--color-surface), #f8fafc);
+}
+
+.reservation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.reservation-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: var(--color-primary);
+    transition: background 0.3s ease;
+}
+
+/* États des réservations */
+.reservation-card.status-confirme::before {
+    background: linear-gradient(90deg, var(--status-confirme), #22c55e);
+}
+
+.reservation-card.status-en_attente::before {
+    background: linear-gradient(90deg, var(--status-en-attente), #fbbf24);
+}
+
+.reservation-card.status-annulee::before {
+    background: linear-gradient(90deg, var(--status-annulee), #ef4444);
+    opacity: 0.7;
+}
+
+.reservation-card.status-terminee::before {
+    background: linear-gradient(90deg, var(--status-terminee), #94a3b8);
+}
+
+/* Header de la réservation */
+.reservation-header {
+    padding: var(--spacing-lg);
+    background: linear-gradient(135deg, var(--color-primary) 0%, #1e40af 100%);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.reservation-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -50px;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float 8s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    50% { transform: translate(-10px, -10px) rotate(180deg); }
+}
+
+.reservation-espace {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+}
+
+.reservation-statut {
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    z-index: 1;
+}
+
+/* Couleurs spécifiques pour les statuts */
+.status-confirme .reservation-statut {
+    background-color: rgba(22, 163, 74, 0.9);
+    color: white;
+    box-shadow: 0 0 20px rgba(22, 163, 74, 0.3);
+}
+
+.status-en_attente .reservation-statut {
+    background-color: rgba(245, 158, 11, 0.9);
+    color: white;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+.status-annulee .reservation-statut {
+    background-color: rgba(220, 38, 38, 0.9);
+    color: white;
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+}
+
+.status-terminee .reservation-statut {
+    background-color: rgba(100, 116, 139, 0.9);
+    color: white;
+    box-shadow: 0 0 20px rgba(100, 116, 139, 0.3);
+}
+
+/* Adaptation des headers selon le statut */
+.status-confirme .reservation-header {
+    background: linear-gradient(135deg, var(--status-confirme) 0%, #22c55e 100%);
+}
+
+.status-en_attente .reservation-header {
+    background: linear-gradient(135deg, var(--status-en-attente) 0%, #fbbf24 100%);
+}
+
+.status-annulee .reservation-header {
+    background: linear-gradient(135deg, var(--status-annulee) 0%, #ef4444 100%);
+    opacity: 0.8;
+}
+
+.status-terminee .reservation-header {
+    background: linear-gradient(135deg, var(--status-terminee) 0%, #94a3b8 100%);
+}
+
+/* Détails de la réservation */
+.reservation-details {
+    padding: var(--spacing-lg);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    background: linear-gradient(180deg, transparent 0%, rgba(248, 250, 252, 0.5) 100%);
+}
+
+.reservation-details p {
+    margin: 0;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    position: relative;
+    background: rgba(248, 250, 252, 0.6);
+    border: 1px solid rgba(226, 232, 240, 0.4);
+    transition: all 0.3s ease;
+}
+
+.reservation-details p:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.reservation-date {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(59, 130, 246, 0.1));
+    border-left: 4px solid var(--color-info);
+}
+
+.reservation-date::before {
+    content: '📅';
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    font-size: 1.2rem;
+    opacity: 0.6;
+}
+
+.reservation-heure {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.1), rgba(30, 64, 175, 0.1));
+    border-left: 4px solid var(--color-primary);
+}
+
+.reservation-heure::before {
+    content: '⏰';
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    font-size: 1.2rem;
+    opacity: 0.6;
+}
+
+.reservation-prix {
+    background: linear-gradient(135deg, rgba(22, 163, 74, 0.1), rgba(34, 197, 94, 0.1));
+    border-left: 4px solid var(--color-success);
+    font-weight: 600;
+}
+
+.reservation-prix::before {
+    content: '💰';
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    font-size: 1.2rem;
+    opacity: 0.6;
+}
+
+.reservation-creation {
+    background: linear-gradient(135deg, rgba(100, 116, 139, 0.1), rgba(148, 163, 184, 0.1));
+    border-left: 4px solid var(--color-secondary);
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.reservation-creation::before {
+    content: '📝';
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    font-size: 1rem;
+    opacity: 0.6;
+}
+
+.reservation-details strong {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Actions de la réservation */
+.reservation-actions {
+    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.3), rgba(226, 232, 240, 0.2));
+    border-top: 1px solid rgba(226, 232, 240, 0.4);
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Boutons */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: none;
+    font-size: 0.875rem;
+    line-height: 1.25;
+    min-height: 44px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-primary), #1e40af);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1e40af, var(--color-info));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--color-error), #ef4444);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    min-height: 36px;
+}
+
+/* Message aucune réservation */
+.no-reservations {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    background: linear-gradient(145deg, var(--color-surface), #f8fafc);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 2px dashed var(--color-secondary);
+    position: relative;
+    overflow: hidden;
+}
+
+.no-reservations::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(30, 58, 138, 0.03) 0%, transparent 70%);
+    animation: rotate 30s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.no-data {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    margin: 0 0 var(--spacing-xl) 0;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+}
+
+.no-data::before {
+    content: '📋';
+    display: block;
+    font-size: 4rem;
+    margin-bottom: var(--spacing-lg);
+    opacity: 0.4;
+    filter: grayscale(0.3);
+}
+
+.no-reservations .btn {
+    position: relative;
+    z-index: 1;
+    min-width: 200px;
+}
+
+/* États visuels pour les réservations annulées */
+.status-annulee {
+    opacity: 0.7;
+}
+
+.status-annulee .reservation-details {
+    filter: grayscale(0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #reservations-page {
+        padding: var(--spacing-md);
+    }
+    
+    .page-header {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        text-align: center;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .reservation-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-md);
+    }
+    
+    .reservation-details {
+        grid-template-columns: 1fr;
+        padding: var(--spacing-md);
+    }
+    
+    .reservation-actions {
+        padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 1.75rem;
+    }
+    
+    .page-title::before {
+        font-size: 2rem;
+    }
+    
+    .reservation-espace {
+        font-size: 1.1rem;
+    }
+    
+    .reservation-statut {
+        font-size: 0.7rem;
+        padding: var(--spacing-xs);
+    }
+    
+    .btn {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Animation d'apparition */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.reservation-card {
+    animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.reservation-card:nth-child(1) { animation-delay: 0.1s; }
+.reservation-card:nth-child(2) { animation-delay: 0.2s; }
+.reservation-card:nth-child(3) { animation-delay: 0.3s; }
+.reservation-card:nth-child(4) { animation-delay: 0.4s; }
+.reservation-card:nth-child(5) { animation-delay: 0.5s; }
+.reservation-card:nth-child(6) { animation-delay: 0.6s; }
+
+.page-header {
+    animation: fadeIn 0.8s ease forwards;
+}
+
+.no-reservations {
+    animation: fadeIn 1s ease forwards;
+}
+
+/* Effet de pulsation pour les réservations urgentes */
+.reservation-card.status-en_attente {
+    animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards,
+               gentle-pulse 3s ease-in-out infinite 1s;
+}
+
+@keyframes gentle-pulse {
+    0%, 100% { 
+        box-shadow: var(--shadow-md); 
+    }
+    50% { 
+        box-shadow: 0 0 20px rgba(245, 158, 11, 0.2), var(--shadow-lg);
+    }
+}
+
+
+
+
+@media (max-width: 768px) { /* cible les écrans ≤ 768px, typiquement tablettes et mobiles */
+     #reservations-page.page-container {
+        margin-top: 20rem; /* ou la valeur que tu veux pour mobile */
+    }
+}
+
+#abonnement-container {
+    border: 1px solid #ddd;       /* bordure légère comme les cartes */
+    border-radius: 8px;           /* coins arrondis */
+    padding: 1.5rem;              /* espace intérieur */
+    margin: 1.5rem 0;             /* espace extérieur vertical */
+    background-color: #f9f9f9;    /* fond légèrement gris clair */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05); /* ombre subtile */
+}
+
+#abonnement-container h3 {
+    margin-bottom: 0.75rem;
+    font-size: 1.25rem;
+    color: #333;
+}
+
+#abonnement-container p {
+    margin-bottom: 1rem;
+    color: #555;
+    font-size: 1rem;
+}
+
+#abonnement-container .btn {
+    display: inline-block;
+    text-decoration: none;
+    font-size: 0.95rem;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+#abonnement-container .btn:hover {
+    background-color: #0056b3; /* couleur légèrement plus foncée au survol */
+    color: #fff;
+}
+
+</style>
+<div id="reservations-page" class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">Mes Réservations</h1>
+        <a href="{% url 'reserver_espace' %}" class="btn btn-primary">Nouvelle réservation</a>
+    </div>
+
+    <div class="reservations-container">
+        {% for reservation in reservations %}
+            <div class="reservation-card status-{{ reservation.statut }}">
+                <div class="reservation-header">
+                    <h3 class="reservation-espace">{{ reservation.espace.nom }}</h3>
+                    <span class="reservation-statut">{{ reservation.get_statut_display }}</span>
+                </div>
+                
+                <div class="reservation-details">
+                    <p class="reservation-date">
+                        <strong>Date:</strong> {{ reservation.date_debut|date:"d/m/Y" }}
+                    </p>
+                    <p class="reservation-heure">
+                        <strong>Horaire:</strong> {{ reservation.date_debut|date:"H:i" }} - {{ reservation.date_fin|date:"H:i" }}
+                    </p>
+                    <p class="reservation-prix">
+                        <strong>Prix:</strong> {{ reservation.prix_total }}€
+                    </p>
+                    <p class="reservation-creation">
+                        <strong>Réservée le:</strong> {{ reservation.date_creation|date:"d/m/Y H:i" }}
+                    </p>
+                </div>
+
+                <div class="reservation-actions">
+                    {% if reservation.statut != 'annulee' and reservation.date_debut > now %}
+                        <a href="{% url 'annuler_reservation' reservation.id %}" 
+                           class="btn btn-danger btn-small"
+                           onclick="return confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')">
+                           Annuler
+                        </a>
+                        
+                         <!-- Lien pour payer cette réservation -->
+                        <a href="{% url 'page_paiement' %}?type=reservation&id={{ reservation.id }}"
+                           class="btn btn-primary btn-small">
+                           Payer cette réservation
+                        </a>
+                      
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="no-reservations">
+                <p class="no-data">Vous n'avez aucune réservation.</p>
+                <a href="{% url 'reserver_espace' %}" class="btn btn-primary">Faire une réservation</a>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Bloc pour payer l'abonnement -->
+    <div id="abonnement-container" class="reservation-card">
+        <h3>Abonnement actuel</h3>
+        <p>Type d'abonnement : {{ profil.get_type_abonnement_display }}</p>
+        <a href="{% url 'page_paiement' %}?type=abonnement" class="btn btn-primary btn-small">
+            Payer mon abonnement
+        </a>
+    </div>
+</div>
+{% endblock %}

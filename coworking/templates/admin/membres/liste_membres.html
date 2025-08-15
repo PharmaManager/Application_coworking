@@ -1,0 +1,671 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Liste des membres - Administration{% endblock %}
+
+{% block page_title %}Gestion des membres{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group me-2">
+    <a href="{% url 'creer_membre_admin' %}" class="btn btn-primary btn-sm" id="btn-nouveau-membre">
+        <i class="bi bi-person-plus"></i> Nouveau membre
+    </a>
+</div>
+<div class="btn-group me-2">
+    <button class="btn btn-sm btn-outline-secondary" id="btn-refresh">
+        <i class="bi bi-arrow-clockwise"></i> Actualiser
+    </button>
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn-export">
+        <i class="bi bi-download"></i> Exporter
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="#" id="export-excel">Excel</a></li>
+        <li><a class="dropdown-item" href="#" id="export-pdf">PDF</a></li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Liste des membres</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<!-- Filtres -->
+<div class="card mb-4" id="filtres-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-funnel"></i> Filtres</h6>
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filtres-content" id="toggle-filtres">
+            <i class="bi bi-chevron-down"></i>
+        </button>
+    </div>
+    <div class="collapse show" id="filtres-content">
+        <div class="card-body">
+            <form method="get" class="row g-3" id="form-filtres">
+                <div class="col-md-6">
+                    <label for="recherche" class="form-label">Recherche</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="recherche" name="recherche" 
+                               value="{{ request.GET.recherche }}" 
+                               placeholder="Nom, prénom, email, nom d'utilisateur...">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label for="type_abonnement" class="form-label">Type d'abonnement</label>
+                    <select class="form-select" id="type_abonnement" name="type_abonnement">
+                        <option value="">Tous les types</option>
+                        {% for code, nom in types_abonnement %}
+                            <option value="{{ code }}" {% if request.GET.type_abonnement == code %}selected{% endif %}>
+                                {{ nom }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <div class="btn-group w-100">
+                        <button type="submit" class="btn btn-primary" id="btn-filtrer">
+                            <i class="bi bi-funnel"></i> Filtrer
+                        </button>
+                        <a href="{% url 'liste_membres_admin' %}" class="btn btn-outline-secondary" id="btn-reset-filtres">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques rapides -->
+<div class="row mb-4" id="stats-membres">
+    <div class="col-md-3">
+        <div class="card text-center border-primary">
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{ membres.count }}</h5>
+                <p class="card-text">Total des membres</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-success">
+            <div class="card-body">
+                <h5 class="card-title text-success">{{ membres|length }}</h5>
+                <p class="card-text">Résultats affichés</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-info">
+            <div class="card-body">
+                <h5 class="card-title text-info">
+                    {% for membre in membres %}
+                        {% if membre.profilmembre.abonnement_actif %}{{ forloop.counter0|add:1 }}{% endif %}
+                    {% endfor %}
+                </h5>
+                <p class="card-text">Abonnements actifs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-warning">
+            <div class="card-body">
+                <h5 class="card-title text-warning">
+                    {% for membre in membres %}
+                        {% if not membre.profilmembre.abonnement_actif %}{{ forloop.counter0|add:1 }}{% endif %}
+                    {% endfor %}
+                </h5>
+                <p class="card-text">Abonnements inactifs</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des membres -->
+<div class="card" id="membres-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-people"></i> Liste des membres ({{ membres.count }})</h6>
+        <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-outline-secondary" id="view-table" title="Vue tableau">
+                <i class="bi bi-table"></i>
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="view-cards" title="Vue cartes">
+                <i class="bi bi-grid-3x3-gap"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if membres %}
+            <!-- Vue tableau (par défaut) -->
+            <div class="table-responsive" id="table-view">
+                <table class="table table-hover mb-0" id="membres-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="select-all">
+                                    <label class="form-check-label" for="select-all"></label>
+                                </div>
+                            </th>
+                            <th>Membre</th>
+                            <th>Email</th>
+                            <th>Entreprise</th>
+                            <th>Téléphone</th>
+                            <th>Abonnement</th>
+                            <th>Statut</th>
+                            <th>Date d'adhésion</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for membre in membres %}
+                        <tr data-membre-id="{{ membre.id }}" class="membre-row">
+                            <td>
+                                <div class="form-check">
+                                    <input class="form-check-input membre-checkbox" type="checkbox" value="{{ membre.id }}">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-3" data-initials="{{ membre.first_name.0|default:membre.username.0|upper }}{{ membre.last_name.0|default:''|upper }}">
+                                        {{ membre.first_name.0|default:membre.username.0|upper }}{{ membre.last_name.0|default:''|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ membre.first_name }} {{ membre.last_name }}</div>
+                                        <small class="text-muted">@{{ membre.username }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ membre.email }}</td>
+                            <td>{{ membre.profilmembre.entreprise|default:"Non renseigné" }}</td>
+                            <td>{{ membre.profilmembre.telephone|default:"Non renseigné" }}</td>
+                            <td>
+                                <span class="badge bg-info">
+                                    {{ membre.profilmembre.get_type_abonnement_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if membre.profilmembre.abonnement_actif %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if membre.profilmembre.abonnement_actif %}Actif{% else %}Inactif{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <small>{{ membre.profilmembre.date_adhesion|date:"d/m/Y" }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'detail_membre_admin' membre.id %}" class="btn btn-outline-primary" title="Voir détails">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'modifier_membre_admin' membre.id %}" class="btn btn-outline-warning" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger" title="Supprimer" 
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal" 
+                                            data-membre-id="{{ membre.id }}" data-membre-nom="{{ membre.first_name }} {{ membre.last_name }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Vue cartes (masquée par défaut) -->
+            <div class="row g-3 p-3 d-none" id="cards-view">
+                {% for membre in membres %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card membre-card" data-membre-id="{{ membre.id }}">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="avatar-circle me-3" data-initials="{{ membre.first_name.0|default:membre.username.0|upper }}{{ membre.last_name.0|default:''|upper }}">
+                                    {{ membre.first_name.0|default:membre.username.0|upper }}{{ membre.last_name.0|default:''|upper }}
+                                </div>
+                                <div>
+                                    <h6 class="card-title mb-0">{{ membre.first_name }} {{ membre.last_name }}</h6>
+                                    <small class="text-muted">@{{ membre.username }}</small>
+                                </div>
+                            </div>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="bi bi-envelope me-1"></i>{{ membre.email }}<br>
+                                    <i class="bi bi-building me-1"></i>{{ membre.profilmembre.entreprise|default:"Non renseigné" }}<br>
+                                    <i class="bi bi-phone me-1"></i>{{ membre.profilmembre.telephone|default:"Non renseigné" }}
+                                </small>
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge bg-info">{{ membre.profilmembre.get_type_abonnement_display }}</span>
+                                    <span class="badge {% if membre.profilmembre.abonnement_actif %}bg-success{% else %}bg-danger{% endif %}">
+                                        {% if membre.profilmembre.abonnement_actif %}Actif{% else %}Inactif{% endif %}
+                                    </span>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'detail_membre_admin' membre.id %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'modifier_membre_admin' membre.id %}" class="btn btn-outline-warning">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger" 
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal" 
+                                            data-membre-id="{{ membre.id }}" data-membre-nom="{{ membre.first_name }} {{ membre.last_name }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        {% else %}
+            <!-- État vide -->
+            <div class="text-center py-5" id="empty-state">
+                <i class="bi bi-people display-1 text-muted"></i>
+                <h4 class="mt-3">Aucun membre trouvé</h4>
+                <p class="text-muted">
+                    {% if request.GET.recherche or request.GET.type_abonnement %}
+                        Aucun membre ne correspond à vos critères de recherche.
+                    {% else %}
+                        Vous n'avez pas encore de membres enregistrés.
+                    {% endif %}
+                </p>
+                <a href="{% url 'creer_membre_admin' %}" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Créer le premier membre
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Actions groupées -->
+{% if membres %}
+<div class="card mt-3 d-none" id="bulk-actions-card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <span><span id="selected-count">0</span> membre(s) sélectionné(s)</span>
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-warning" id="bulk-activate">
+                    <i class="bi bi-check-circle"></i> Activer
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="bulk-deactivate">
+                    <i class="bi bi-x-circle"></i> Désactiver
+                </button>
+                <button type="button" class="btn btn-outline-danger" id="bulk-delete">
+                    <i class="bi bi-trash"></i> Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="bi bi-exclamation-triangle text-warning display-4"></i>
+                    <h6 class="mt-3">Êtes-vous sûr de vouloir supprimer ce membre ?</h6>
+                    <p class="text-muted" id="membre-nom-suppression">Cette action est irréversible.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">
+                    <i class="bi bi-trash"></i> Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour actions groupées -->
+<div class="modal fade" id="bulkActionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulk-modal-title">Confirmer l'action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="bi bi-question-circle text-info display-4" id="bulk-modal-icon"></i>
+                    <h6 class="mt-3" id="bulk-modal-message">Confirmer cette action ?</h6>
+                    <p class="text-muted" id="bulk-modal-count"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </button>
+                <button type="button" class="btn btn-primary" id="confirm-bulk-action">
+                    <i class="bi bi-check"></i> Confirmer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast pour notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3" id="toast-container">
+    <div id="success-toast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-check-circle me-2"></i>
+                <span id="success-message">Action effectuée avec succès</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    
+    <div id="error-toast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-exclamation-circle me-2"></i>
+                <span id="error-message">Une erreur s'est produite</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript pour les fonctionnalités -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Variables globales
+    let selectedMembers = [];
+    let currentView = 'table';
+    let memberToDelete = null;
+    let bulkAction = null;
+
+    // Éléments DOM
+    const selectAllCheckbox = document.getElementById('select-all');
+    const memberCheckboxes = document.querySelectorAll('.membre-checkbox');
+    const bulkActionsCard = document.getElementById('bulk-actions-card');
+    const selectedCountSpan = document.getElementById('selected-count');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const bulkActionModal = new bootstrap.Modal(document.getElementById('bulkActionModal'));
+    const successToast = new bootstrap.Toast(document.getElementById('success-toast'));
+    const errorToast = new bootstrap.Toast(document.getElementById('error-toast'));
+
+    // Gestion de la sélection
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            memberCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateSelectedMembers();
+        });
+    }
+
+    memberCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedMembers);
+    });
+
+    function updateSelectedMembers() {
+        selectedMembers = Array.from(memberCheckboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value);
+        
+        selectedCountSpan.textContent = selectedMembers.length;
+        
+        if (selectedMembers.length > 0) {
+            bulkActionsCard.classList.remove('d-none');
+        } else {
+            bulkActionsCard.classList.add('d-none');
+        }
+
+        // Mise à jour du checkbox "Sélectionner tout"
+        if (selectAllCheckbox) {
+            if (selectedMembers.length === 0) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = false;
+            } else if (selectedMembers.length === memberCheckboxes.length) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = true;
+            } else {
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
+    }
+
+    // Gestion des vues (tableau/cartes)
+    const viewTableBtn = document.getElementById('view-table');
+    const viewCardsBtn = document.getElementById('view-cards');
+    const tableView = document.getElementById('table-view');
+    const cardsView = document.getElementById('cards-view');
+
+    if (viewTableBtn && viewCardsBtn) {
+        viewTableBtn.addEventListener('click', function() {
+            currentView = 'table';
+            switchView();
+        });
+
+        viewCardsBtn.addEventListener('click', function() {
+            currentView = 'cards';
+            switchView();
+        });
+    }
+
+    function switchView() {
+        if (currentView === 'table') {
+            tableView.classList.remove('d-none');
+            cardsView.classList.add('d-none');
+            viewTableBtn.classList.add('active');
+            viewCardsBtn.classList.remove('active');
+        } else {
+            tableView.classList.add('d-none');
+            cardsView.classList.remove('d-none');
+            viewTableBtn.classList.remove('active');
+            viewCardsBtn.classList.add('active');
+        }
+    }
+
+    // Gestion de la suppression individuelle
+    document.querySelectorAll('[data-bs-target="#deleteModal"]').forEach(button => {
+        button.addEventListener('click', function() {
+            memberToDelete = this.dataset.membreId;
+            const memberName = this.dataset.membreNom;
+            document.getElementById('membre-nom-suppression').textContent = 
+                `Le membre "${memberName}" sera définitivement supprimé.`;
+        });
+    });
+
+    document.getElementById('confirm-delete').addEventListener('click', function() {
+        if (memberToDelete) {
+            // Ici vous pouvez ajouter l'appel AJAX pour supprimer le membre
+            console.log('Suppression du membre:', memberToDelete);
+            
+            // Simulation de suppression réussie
+            deleteModal.hide();
+            showSuccessToast('Membre supprimé avec succès');
+            
+            // Supprimer la ligne du tableau
+            const row = document.querySelector(`[data-membre-id="${memberToDelete}"]`);
+            if (row) {
+                row.remove();
+            }
+            
+            memberToDelete = null;
+        }
+    });
+
+    // Gestion des actions groupées
+    document.getElementById('bulk-activate').addEventListener('click', function() {
+        if (selectedMembers.length === 0) return;
+        
+        bulkAction = 'activate';
+        document.getElementById('bulk-modal-title').textContent = 'Activer les membres';
+        document.getElementById('bulk-modal-message').textContent = 'Voulez-vous activer les membres sélectionnés ?';
+        document.getElementById('bulk-modal-count').textContent = `${selectedMembers.length} membre(s) sélectionné(s)`;
+        document.getElementById('bulk-modal-icon').className = 'bi bi-check-circle text-success display-4';
+        document.getElementById('confirm-bulk-action').className = 'btn btn-success';
+        bulkActionModal.show();
+    });
+
+    document.getElementById('bulk-deactivate').addEventListener('click', function() {
+        if (selectedMembers.length === 0) return;
+        
+        bulkAction = 'deactivate';
+        document.getElementById('bulk-modal-title').textContent = 'Désactiver les membres';
+        document.getElementById('bulk-modal-message').textContent = 'Voulez-vous désactiver les membres sélectionnés ?';
+        document.getElementById('bulk-modal-count').textContent = `${selectedMembers.length} membre(s) sélectionné(s)`;
+        document.getElementById('bulk-modal-icon').className = 'bi bi-x-circle text-warning display-4';
+        document.getElementById('confirm-bulk-action').className = 'btn btn-warning';
+        bulkActionModal.show();
+    });
+
+    document.getElementById('bulk-delete').addEventListener('click', function() {
+        if (selectedMembers.length === 0) return;
+        
+        bulkAction = 'delete';
+        document.getElementById('bulk-modal-title').textContent = 'Supprimer les membres';
+        document.getElementById('bulk-modal-message').textContent = 'Voulez-vous supprimer définitivement les membres sélectionnés ?';
+        document.getElementById('bulk-modal-count').textContent = `${selectedMembers.length} membre(s) sélectionné(s)`;
+        document.getElementById('bulk-modal-icon').className = 'bi bi-exclamation-triangle text-danger display-4';
+        document.getElementById('confirm-bulk-action').className = 'btn btn-danger';
+        bulkActionModal.show();
+    });
+
+    document.getElementById('confirm-bulk-action').addEventListener('click', function() {
+        if (bulkAction && selectedMembers.length > 0) {
+            // Ici vous pouvez ajouter l'appel AJAX pour l'action groupée
+            console.log('Action groupée:', bulkAction, selectedMembers);
+            
+            bulkActionModal.hide();
+            showSuccessToast(`Action "${bulkAction}" effectuée sur ${selectedMembers.length} membre(s)`);
+            
+            // Réinitialiser la sélection
+            memberCheckboxes.forEach(checkbox => checkbox.checked = false);
+            if (selectAllCheckbox) selectAllCheckbox.checked = false;
+            updateSelectedMembers();
+        }
+    });
+
+    // Gestion du rafraîchissement
+    document.getElementById('btn-refresh').addEventListener('click', function() {
+        window.location.reload();
+    });
+
+    // Gestion de l'export
+    document.getElementById('export-excel').addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Export Excel');
+        showSuccessToast('Export Excel en cours...');
+    });
+
+    document.getElementById('export-pdf').addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Export PDF');
+        showSuccessToast('Export PDF en cours...');
+    });
+
+    // Gestion de l'effacement automatique de la recherche
+    const rechercheInput = document.getElementById('recherche');
+    if (rechercheInput) {
+        rechercheInput.addEventListener('input', function() {
+            if (this.value === '') {
+                // Optionnel: soumettre automatiquement le formulaire quand la recherche est vidée
+                // document.getElementById('form-filtres').submit();
+            }
+        });
+    }
+
+    // Fonctions utilitaires pour les toasts
+    function showSuccessToast(message) {
+        document.getElementById('success-message').textContent = message;
+        successToast.show();
+    }
+
+    function showErrorToast(message) {
+        document.getElementById('error-message').textContent = message;
+        errorToast.show();
+    }
+
+    // Gestion de l'effondrement des filtres
+    const toggleFiltres = document.getElementById('toggle-filtres');
+    if (toggleFiltres) {
+        const filtresContent = document.getElementById('filtres-content');
+        filtresContent.addEventListener('hidden.bs.collapse', function() {
+            toggleFiltres.querySelector('i').className = 'bi bi-chevron-right';
+        });
+        filtresContent.addEventListener('shown.bs.collapse', function() {
+            toggleFiltres.querySelector('i').className = 'bi bi-chevron-down';
+        });
+    }
+
+    // Initialisation des tooltips si Bootstrap est chargé
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+});
+</script>
+
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.membre-row:hover {
+    background-color: #f8f9fa;
+}
+
+.membre-card {
+    transition: transform 0.2s;
+}
+
+.membre-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.toast-container {
+    z-index: 1060;
+}
+
+.btn-group .btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+@media (max-width: 768px) {
+    .avatar-circle {
+        width: 35px;
+        height: 35px;
+        font-size: 12px;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.4rem;
+    }
+}
+</style>
+
+{% endblock %}

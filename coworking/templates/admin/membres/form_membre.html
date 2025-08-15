@@ -1,0 +1,399 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}{{ action }} un membre - Administration{% endblock %}
+
+{% block page_title %}{{ action }} un membre{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb" class="breadcrumb-nav">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'liste_membres_admin' %}">Membres</a></li>
+        <li class="breadcrumb-item active">{{ action }} un membre</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <a href="{% url 'liste_membres_admin' %}" class="btn btn-outline-secondary" id="btn-retour">
+        <i class="bi bi-arrow-left"></i> Retour à la liste
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" id="form-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card" id="membre-form-card">
+                <div class="card-header" id="form-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-person-plus"></i> 
+                        {{ action }} un nouveau membre
+                    </h5>
+                </div>
+                <div class="card-body" id="form-body">
+                    <form method="post" id="membre-form" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Section Informations utilisateur -->
+                        <div class="form-section" id="user-info-section">
+                            <h6 class="section-title">
+                                <i class="bi bi-person-circle"></i> 
+                                Informations utilisateur
+                            </h6>
+                            <hr class="section-divider">
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="username-group">
+                                        <label for="{{ user_form.username.id_for_label }}" class="form-label required">
+                                            Nom d'utilisateur
+                                        </label>
+                                        {{ user_form.username }}
+                                        {% if user_form.username.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in user_form.username.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text">
+                                            Utilisé pour la connexion. Lettres, chiffres et @/./+/-/_ uniquement.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="email-group">
+                                        <label for="{{ user_form.email.id_for_label }}" class="form-label required">
+                                            Email
+                                        </label>
+                                        {{ user_form.email }}
+                                        {% if user_form.email.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in user_form.email.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="first-name-group">
+                                        <label for="{{ user_form.first_name.id_for_label }}" class="form-label required">
+                                            Prénom
+                                        </label>
+                                        {{ user_form.first_name }}
+                                        {% if user_form.first_name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in user_form.first_name.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="last-name-group">
+                                        <label for="{{ user_form.last_name.id_for_label }}" class="form-label required">
+                                            Nom
+                                        </label>
+                                        {{ user_form.last_name }}
+                                        {% if user_form.last_name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in user_form.last_name.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="password1-group">
+                                        <label for="{{ user_form.password1.id_for_label }}" class="form-label required">
+                                            Mot de passe
+                                        </label>
+                                        {{ user_form.password1 }}
+                                        {% if user_form.password1.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in user_form.password1.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text">
+                                            Au moins 8 caractères avec lettres et chiffres.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="password2-group">
+                                        <label for="{{ user_form.password2.id_for_label }}" class="form-label required">
+                                            Confirmer le mot de passe
+                                        </label>
+                                        {{ user_form.password2 }}
+                                        {% if user_form.password2.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in user_form.password2.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Section Profil membre -->
+                        <div class="form-section" id="profil-section">
+                            <h6 class="section-title">
+                                <i class="bi bi-id-card"></i> 
+                                Profil membre
+                            </h6>
+                            <hr class="section-divider">
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="telephone-group">
+                                        <label for="{{ profil_form.telephone.id_for_label }}" class="form-label">
+                                            Téléphone
+                                        </label>
+                                        {{ profil_form.telephone }}
+                                        {% if profil_form.telephone.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in profil_form.telephone.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="entreprise-group">
+                                        <label for="{{ profil_form.entreprise.id_for_label }}" class="form-label">
+                                            Entreprise
+                                        </label>
+                                        {{ profil_form.entreprise }}
+                                        {% if profil_form.entreprise.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in profil_form.entreprise.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="type-abonnement-group">
+                                        <label for="{{ profil_form.type_abonnement.id_for_label }}" class="form-label required">
+                                            Type d'abonnement
+                                        </label>
+                                        {{ profil_form.type_abonnement }}
+                                        {% if profil_form.type_abonnement.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in profil_form.type_abonnement.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="role-group">
+                                        <label for="id_role" class="form-label required">
+                                            Rôle
+                                        </label>
+                                        <select name="role" id="id_role" class="form-select">
+                                            <option value="membre" selected>Membre</option>
+                                            <option value="gestionnaire">Gestionnaire</option>
+                                        </select>
+                                        <div class="form-text">
+                                            Définit les permissions de l'utilisateur dans le système.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Boutons d'action -->
+                        <div class="form-actions" id="form-actions">
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'liste_membres_admin' %}" class="btn btn-outline-secondary" id="btn-annuler">
+                                    <i class="bi bi-x-circle"></i> Annuler
+                                </a>
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-primary" id="btn-sauvegarder">
+                                        <i class="bi bi-check-circle"></i> {{ action }} le membre
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split" 
+                                            data-bs-toggle="dropdown" id="btn-actions-dropdown">
+                                        <span class="visually-hidden">Toggle Dropdown</span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <button type="submit" name="save_and_continue" class="dropdown-item" id="btn-save-continue">
+                                                <i class="bi bi-check2"></i> {{ action }} et continuer la modification
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button type="submit" name="save_and_add_another" class="dropdown-item" id="btn-save-add-another">
+                                                <i class="bi bi-plus-circle"></i> {{ action }} et ajouter un autre
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer l'action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modal-body-text">
+                Êtes-vous sûr de vouloir annuler? Toutes les modifications non sauvegardées seront perdues.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="modal-cancel">Annuler</button>
+                <button type="button" class="btn btn-danger" id="modal-confirm">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('membre-form');
+    const btnAnnuler = document.getElementById('btn-annuler');
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const modalConfirm = document.getElementById('modal-confirm');
+    let formChanged = false;
+    
+    // Détection des changements dans le formulaire
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('change', function() {
+            formChanged = true;
+        });
+    });
+    
+    // Gestion du bouton annuler avec confirmation
+    btnAnnuler.addEventListener('click', function(e) {
+        if (formChanged) {
+            e.preventDefault();
+            confirmModal.show();
+            modalConfirm.onclick = function() {
+                window.location.href = btnAnnuler.href;
+            };
+        }
+    });
+    
+    // Validation en temps réel des mots de passe
+    const password1 = document.getElementById('{{ user_form.password1.id_for_label }}');
+    const password2 = document.getElementById('{{ user_form.password2.id_for_label }}');
+    
+    if (password1 && password2) {
+        function validatePasswords() {
+            if (password1.value && password2.value) {
+                if (password1.value !== password2.value) {
+                    password2.classList.add('is-invalid');
+                    password2.classList.remove('is-valid');
+                } else {
+                    password2.classList.remove('is-invalid');
+                    password2.classList.add('is-valid');
+                }
+            }
+        }
+        
+        password1.addEventListener('input', validatePasswords);
+        password2.addEventListener('input', validatePasswords);
+    }
+    
+    // Validation de l'email en temps réel
+    const emailField = document.getElementById('{{ user_form.email.id_for_label }}');
+    if (emailField) {
+        emailField.addEventListener('blur', function() {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (this.value && !emailRegex.test(this.value)) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            } else if (this.value) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    }
+    
+    // Auto-formatage du numéro de téléphone
+    const phoneField = document.getElementById('{{ profil_form.telephone.id_for_label }}');
+    if (phoneField) {
+        phoneField.addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            if (value.startsWith('33')) {
+                value = '+33 ' + value.substring(2).replace(/(\d{1})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+            } else if (value.startsWith('0')) {
+                value = value.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+            }
+            this.value = value.trim();
+        });
+    }
+    
+    // Gestion de la soumission du formulaire
+    form.addEventListener('submit', function(e) {
+        const submitBtn = document.getElementById('btn-sauvegarder');
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Création en cours...';
+        submitBtn.disabled = true;
+        
+        // Réactiver le bouton après 5 secondes en cas d'erreur
+        setTimeout(() => {
+            if (submitBtn.disabled) {
+                submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> {{ action }} le membre';
+                submitBtn.disabled = false;
+            }
+        }, 5000);
+    });
+    
+    // Auto-suggestion du nom d'utilisateur basé sur prénom/nom
+    const firstNameField = document.getElementById('{{ user_form.first_name.id_for_label }}');
+    const lastNameField = document.getElementById('{{ user_form.last_name.id_for_label }}');
+    const usernameField = document.getElementById('{{ user_form.username.id_for_label }}');
+    
+    if (firstNameField && lastNameField && usernameField) {
+        function suggestUsername() {
+            if (!usernameField.value && firstNameField.value && lastNameField.value) {
+                const suggestion = (firstNameField.value.toLowerCase() + '.' + lastNameField.value.toLowerCase())
+                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Supprime les accents
+                    .replace(/[^a-z0-9.]/g, ''); // Garde seulement lettres, chiffres et points
+                usernameField.value = suggestion;
+                formChanged = true;
+            }
+        }
+        
+        firstNameField.addEventListener('blur', suggestUsername);
+        lastNameField.addEventListener('blur', suggestUsername);
+    }
+});
+</script>
+{% endblock %}

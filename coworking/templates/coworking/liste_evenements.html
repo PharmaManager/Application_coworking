@@ -1,0 +1,535 @@
+{% extends 'base.html' %}
+
+{% block title %}Événements{% endblock %}
+
+{% block content %}
+
+<style>
+
+/* Variables de couleur (reprises de votre palette) */
+:root {
+    /* Couleurs principales */
+    --color-primary: #1E3A8A; /* Bleu profond, sérieux et professionnel */
+    --color-secondary: #64748B; /* Gris-bleu, pour les textes ou éléments secondaires */
+    --color-accent: #F59E0B; /* Jaune/orangé, pour les boutons ou alertes */
+    --color-background: #F8FAFC; /* Très clair, pour le fond des pages */
+    --color-surface: #FFFFFF; /* Blanc pour cartes et sections */
+    --color-success: #16A34A; /* Vert pour succès */
+    --color-error: #DC2626; /* Rouge pour erreurs */
+    --color-warning: #FBBF24; /* Jaune pour alertes */
+    --color-info: #0EA5E9; /* Bleu clair pour infos */
+    
+    /* Textes */
+    --text-primary: #111827; /* Noir-gris foncé pour texte principal */
+    --text-secondary: #475569; /* Gris pour texte secondaire */
+    
+    /* Ombres et effets */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    
+    /* Bordures et espacements */
+    --border-radius: 8px;
+    --border-radius-lg: 12px;
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+}
+
+/* Page container */
+#evenements-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--color-background) 0%, #e2e8f0 100%);
+    padding: var(--spacing-xl) var(--spacing-md);
+}
+
+.page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header de la page */
+.page-header {
+    text-align: center;
+    margin-bottom: var(--spacing-2xl);
+    padding: var(--spacing-xl) 0;
+}
+
+.page-title {
+    font-size: 2.75rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    margin: 0;
+    position: relative;
+    display: inline-block;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-info));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.page-title::before {
+    content: '📅';
+    display: block;
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.page-title::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-primary));
+    border-radius: 2px;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Container des événements */
+.evenements-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-2xl);
+}
+
+/* Cartes des événements */
+.evenement-card {
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    position: relative;
+    background: linear-gradient(145deg, var(--color-surface), #f1f5f9);
+}
+
+.evenement-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--shadow-xl);
+}
+
+.evenement-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-primary), var(--color-info));
+    background-size: 200% 100%;
+    animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* Header de l'événement */
+.evenement-header {
+    padding: var(--spacing-lg);
+    background: linear-gradient(135deg, var(--color-primary) 0%, #1e40af 50%, var(--color-info) 100%);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.evenement-header::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(180deg); }
+}
+
+.evenement-nom {
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+    line-height: 1.3;
+}
+
+.evenement-meta {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.evenement-date,
+.evenement-heure {
+    display: inline-flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.evenement-date::before {
+    content: '📅';
+    margin-right: var(--spacing-xs);
+    font-size: 0.875rem;
+}
+
+.evenement-heure::before {
+    content: '⏰';
+    margin-right: var(--spacing-xs);
+    font-size: 0.875rem;
+}
+
+/* Détails de l'événement */
+.evenement-details {
+    padding: var(--spacing-lg);
+    background: linear-gradient(180deg, transparent 0%, rgba(248, 250, 252, 0.5) 100%);
+}
+
+.evenement-details p {
+    margin: 0 0 var(--spacing-md) 0;
+    line-height: 1.6;
+}
+
+.evenement-description {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    margin-bottom: var(--spacing-lg) !important;
+    padding: var(--spacing-md);
+    background-color: rgba(248, 250, 252, 0.8);
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--color-accent);
+}
+
+.evenement-lieu {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+}
+
+.evenement-lieu::before {
+    content: '📍';
+    margin-right: var(--spacing-sm);
+    font-size: 1rem;
+}
+
+.evenement-prix {
+    color: var(--color-success);
+    font-weight: 700;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+}
+
+.evenement-prix::before {
+    content: '💰';
+    margin-right: var(--spacing-sm);
+    font-size: 1rem;
+}
+
+.evenement-places {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: linear-gradient(90deg, rgba(30, 58, 138, 0.05), rgba(14, 165, 233, 0.05));
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(30, 58, 138, 0.1);
+}
+
+.evenement-places::before {
+    content: '👥';
+    margin-right: var(--spacing-sm);
+    font-size: 1rem;
+}
+
+.evenement-details strong {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* Actions de l'événement */
+.evenement-actions {
+    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.3), rgba(226, 232, 240, 0.2));
+    border-top: 1px solid rgba(226, 232, 240, 0.4);
+}
+
+/* Boutons */
+.btn {
+    padding: 0.875rem 2rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: none;
+    font-size: 0.95rem;
+    line-height: 1.25;
+    min-height: 48px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-outline {
+    background: linear-gradient(135deg, var(--color-primary), #1e40af);
+    color: white;
+    border: 2px solid transparent;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-outline:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+    background: linear-gradient(135deg, #1e40af, var(--color-info));
+}
+
+.btn-outline:active {
+    transform: translateY(0);
+}
+
+/* Message aucun événement */
+.no-evenements {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--spacing-2xl);
+    background: linear-gradient(145deg, var(--color-surface), #f8fafc);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 2px dashed var(--color-secondary);
+    position: relative;
+    overflow: hidden;
+}
+
+.no-evenements::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(30, 58, 138, 0.05) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.no-data {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    margin: 0;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+}
+
+.no-data::before {
+    content: '📅';
+    display: block;
+    font-size: 4rem;
+    margin-bottom: var(--spacing-lg);
+    opacity: 0.6;
+    filter: grayscale(0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #evenements-page {
+        padding: var(--spacing-md);
+    }
+    
+    .page-title {
+        font-size: 2.25rem;
+    }
+    
+    .evenements-container {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+    
+    .evenement-header {
+        padding: var(--spacing-md);
+    }
+    
+    .evenement-details {
+        padding: var(--spacing-md);
+    }
+    
+    .evenement-actions {
+        padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+    }
+    
+    .evenement-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 1.875rem;
+    }
+    
+    .evenement-nom {
+        font-size: 1.2rem;
+    }
+    
+    .evenement-date,
+    .evenement-heure {
+        font-size: 0.8rem;
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* Animation d'apparition */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.evenement-card {
+    animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.evenement-card:nth-child(odd) {
+    animation: slideInLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.evenement-card:nth-child(1) { animation-delay: 0.1s; }
+.evenement-card:nth-child(2) { animation-delay: 0.2s; }
+.evenement-card:nth-child(3) { animation-delay: 0.3s; }
+.evenement-card:nth-child(4) { animation-delay: 0.4s; }
+.evenement-card:nth-child(5) { animation-delay: 0.5s; }
+.evenement-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* Effet de pulsation pour les événements urgents ou populaires */
+.evenement-card.featured {
+    animation: pulse-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+    from {
+        box-shadow: var(--shadow-lg);
+    }
+    to {
+        box-shadow: 0 0 30px rgba(30, 58, 138, 0.3), var(--shadow-xl);
+    }
+}
+
+
+@media (max-width: 768px) { /* cible les écrans ≤ 768px, typiquement tablettes et mobiles */
+     #evenements-page.page-container {
+        margin-top: 20rem; /* ou la valeur que tu veux pour mobile */
+    }
+}
+</style>
+<div id="evenements-page" class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">Événements à Venir</h1>
+    </div>
+
+    <div class="evenements-container">
+        {% for evenement in evenements %}
+            <div class="evenement-card">
+                <div class="evenement-header">
+                    <h3 class="evenement-nom">{{ evenement.nom }}</h3>
+                    <div class="evenement-meta">
+                        <span class="evenement-date">{{ evenement.date_debut|date:"d/m/Y" }}</span>
+                        <span class="evenement-heure">{{ evenement.date_debut|date:"H:i" }}</span>
+                    </div>
+                </div>
+
+                <div class="evenement-details">
+                    <p class="evenement-description">{{ evenement.description|truncatechars:150 }}</p>
+                    <p class="evenement-lieu"><strong>Lieu:</strong> {{ evenement.lieu }}</p>
+                    <p class="evenement-prix">
+                        <strong>Prix:</strong> 
+                        {% if evenement.prix > 0 %}{{ evenement.prix }}€{% else %}Gratuit{% endif %}
+                    </p>
+                    <p class="evenement-places">
+                        <strong>Places:</strong> {{ evenement.places_restantes }} disponibles sur {{ evenement.places_max }}
+                    </p>
+                </div>
+
+                <div class="evenement-actions">
+                    <a href="{% url 'detail_evenement' evenement.id %}" class="btn btn-outline">Voir détails</a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="no-evenements">
+                <p class="no-data">Aucun événement programmé pour le moment.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,711 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}{{ membre.first_name }} {{ membre.last_name }} - Détail membre{% endblock %}
+
+{% block page_title %}Détail du membre{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group me-2">
+    <a href="{% url 'modifier_membre_admin' membre.id %}" class="btn btn-warning btn-sm" id="btn-modifier-membre">
+        <i class="bi bi-pencil"></i> Modifier
+    </a>
+</div>
+<div class="btn-group me-2">
+    <button class="btn btn-sm btn-outline-danger" id="btn-supprimer-membre" 
+            data-bs-toggle="modal" data-bs-target="#deleteModal"
+            data-membre-id="{{ membre.id }}" data-membre-nom="{{ membre.first_name }} {{ membre.last_name }}">
+        <i class="bi bi-trash"></i> Supprimer
+    </button>
+
+    <script>
+        // Gestion de la suppression individuelle
+    document.querySelectorAll('[data-bs-target="#deleteModal"]').forEach(button => {
+        button.addEventListener('click', function() {
+            memberToDelete = this.dataset.membreId;
+            const memberName = this.dataset.membreNom;
+            document.getElementById('membre-nom-suppression').textContent = 
+                `Le membre "${memberName}" sera définitivement supprimé.`;
+        });
+    });
+
+    document.getElementById('confirm-delete').addEventListener('click', function() {
+        if (memberToDelete) {
+            // Ici vous pouvez ajouter l'appel AJAX pour supprimer le membre
+            console.log('Suppression du membre:', memberToDelete);
+            
+            // Simulation de suppression réussie
+            deleteModal.hide();
+            showSuccessToast('Membre supprimé avec succès');
+            
+            // Supprimer la ligne du tableau
+            const row = document.querySelector(`[data-membre-id="${memberToDelete}"]`);
+            if (row) {
+                row.remove();
+            }
+            
+            memberToDelete = null;
+        }
+    });
+
+    </script>
+</div>
+<div class="btn-group me-2">
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn-actions">
+        <i class="bi bi-three-dots"></i> Actions
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="#" id="action-envoyer-email">
+            <i class="bi bi-envelope"></i> Envoyer un email
+        </a></li>
+        <li><a class="dropdown-item" href="#" id="action-generer-facture">
+            <i class="bi bi-file-earmark-text"></i> Générer une facture
+        </a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="#" id="action-toggle-abonnement">
+            <i class="bi bi-toggle-on"></i> 
+            {% if membre.profilmembre.abonnement_actif %}Désactiver{% else %}Activer{% endif %} l'abonnement
+        </a></li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'liste_membres_admin' %}">Membres</a></li>
+        <li class="breadcrumb-item active">{{ membre.first_name }} {{ membre.last_name }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<!-- Informations du membre -->
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card mb-4" id="profil-membre-card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-person"></i> Profil du membre</h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="avatar-circle mx-auto mb-3" id="membre-avatar" 
+                     data-initials="{{ membre.first_name.0|default:membre.username.0|upper }}{{ membre.last_name.0|default:''|upper }}">
+                    {{ membre.first_name.0|default:membre.username.0|upper }}{{ membre.last_name.0|default:''|upper }}
+                </div>
+                <h5 class="card-title mb-1" id="membre-nom">{{ membre.first_name }} {{ membre.last_name }}</h5>
+                <p class="text-muted mb-3" id="membre-username">@{{ membre.username }}</p>
+                
+                <div class="mb-3">
+                    <span class="badge bg-info" id="badge-abonnement">
+                        {{ membre.profilmembre.get_type_abonnement_display }}
+                    </span>
+                    <span class="badge {% if membre.profilmembre.abonnement_actif %}bg-success{% else %}bg-danger{% endif %}" 
+                          id="badge-statut">
+                        {% if membre.profilmembre.abonnement_actif %}Actif{% else %}Inactif{% endif %}
+                    </span>
+                </div>
+                
+                <div class="text-start">
+                    <div class="mb-2" id="membre-email">
+                        <i class="bi bi-envelope text-muted me-2"></i>
+                        <strong>Email:</strong> {{ membre.email }}
+                    </div>
+                    <div class="mb-2" id="membre-telephone">
+                        <i class="bi bi-phone text-muted me-2"></i>
+                        <strong>Téléphone:</strong> {{ membre.profilmembre.telephone|default:"Non renseigné" }}
+                    </div>
+                    <div class="mb-2" id="membre-entreprise">
+                        <i class="bi bi-building text-muted me-2"></i>
+                        <strong>Entreprise:</strong> {{ membre.profilmembre.entreprise|default:"Non renseigné" }}
+                    </div>
+                    <div class="mb-2" id="membre-adhesion">
+                        <i class="bi bi-calendar text-muted me-2"></i>
+                        <strong>Adhésion:</strong> {{ membre.profilmembre.date_adhesion|date:"d/m/Y" }}
+                    </div>
+                    <div class="mb-2" id="membre-derniere-connexion">
+                        <i class="bi bi-clock text-muted me-2"></i>
+                        <strong>Dernière connexion:</strong> 
+                        {% if membre.last_login %}
+                            {{ membre.last_login|date:"d/m/Y à H:i" }}
+                        {% else %}
+                            Jamais connecté
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-8">
+        <!-- Statistiques -->
+        <div class="row mb-4" id="stats-membre">
+            <div class="col-md-3">
+                <div class="card text-center border-primary">
+                    <div class="card-body">
+                        <h4 class="card-title text-primary" id="stat-total-reservations">{{ total_reservations }}</h4>
+                        <p class="card-text">Réservations totales</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center border-success">
+                    <div class="card-body">
+                        <h4 class="card-title text-success" id="stat-reservations-confirmees">{{ reservations_confirmees }}</h4>
+                        <p class="card-text">Confirmées</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center border-info">
+                    <div class="card-body">
+                        <h4 class="card-title text-info" id="stat-evenements">{{ evenements.count }}</h4>
+                        <p class="card-text">Événements</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center border-warning">
+                    <div class="card-body">
+                        <h4 class="card-title text-warning" id="stat-factures">{{ factures.count }}</h4>
+                        <p class="card-text">Factures</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglets -->
+        <div class="card" id="details-card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="membre-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="reservations-tab" data-bs-toggle="tab" 
+                                data-bs-target="#reservations-panel" type="button" role="tab">
+                            <i class="bi bi-calendar-check"></i> Réservations
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="factures-tab" data-bs-toggle="tab" 
+                                data-bs-target="#factures-panel" type="button" role="tab">
+                            <i class="bi bi-file-earmark-text"></i> Factures
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="evenements-tab" data-bs-toggle="tab" 
+                                data-bs-target="#evenements-panel" type="button" role="tab">
+                            <i class="bi bi-calendar-event"></i> Événements
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="activite-tab" data-bs-toggle="tab" 
+                                data-bs-target="#activite-panel" type="button" role="tab">
+                            <i class="bi bi-activity"></i> Activité
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="membre-tabs-content">
+                    <!-- Onglet Réservations -->
+                    <div class="tab-pane fade show active" id="reservations-panel" role="tabpanel">
+                        {% if dernieres_reservations %}
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="reservations-table">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Espace</th>
+                                            <th>Date début</th>
+                                            <th>Date fin</th>
+                                            <th>Statut</th>
+                                            <th>Prix</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for reservation in dernieres_reservations %}
+                                        <tr class="reservation-row" data-reservation-id="{{ reservation.id }}">
+                                            <td>
+                                                <strong>{{ reservation.espace.nom }}</strong><br>
+                                                <small class="text-muted">{{ reservation.espace.type_espace.nom }}</small>
+                                            </td>
+                                            <td>{{ reservation.date_debut|date:"d/m/Y H:i" }}</td>
+                                            <td>{{ reservation.date_fin|date:"d/m/Y H:i" }}</td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if reservation.statut == 'confirmee' %}bg-success
+                                                    {% elif reservation.statut == 'en_attente' %}bg-warning
+                                                    {% else %}bg-danger{% endif %}">
+                                                    {{ reservation.get_statut_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ reservation.prix_total }} €</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" title="Voir détails"
+                                                            data-bs-toggle="modal" data-bs-target="#reservationModal"
+                                                            data-reservation-id="{{ reservation.id }}">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                    {% if reservation.statut == 'en_attente' %}
+                                                    <button class="btn btn-outline-success" title="Confirmer"
+                                                            data-action="confirmer" data-reservation-id="{{ reservation.id }}">
+                                                        <i class="bi bi-check"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                    <button class="btn btn-outline-danger" title="Annuler"
+                                                            data-action="annuler" data-reservation-id="{{ reservation.id }}">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center mt-3">
+                                <a href="{% url 'liste_reservations_admin' %}?membre={{ membre.id }}" 
+                                   class="btn btn-outline-primary" id="voir-toutes-reservations">
+                                    <i class="bi bi-eye"></i> Voir toutes les réservations
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4" id="no-reservations">
+                                <i class="bi bi-calendar-x display-4 text-muted"></i>
+                                <h6 class="mt-3">Aucune réservation</h6>
+                                <p class="text-muted">Ce membre n'a pas encore effectué de réservation.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Onglet Factures -->
+                    <div class="tab-pane fade" id="factures-panel" role="tabpanel">
+                        {% if factures %}
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="factures-table">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Numéro</th>
+                                            <th>Date</th>
+                                            <th>Échéance</th>
+                                            <th>Montant</th>
+                                            <th>Statut</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for facture in factures %}
+                                        <tr class="facture-row" data-facture-id="{{ facture.id }}">
+                                            <td><strong>{{ facture.numero }}</strong></td>
+                                            <td>{{ facture.date_creation|date:"d/m/Y" }}</td>
+                                            <td>{{ facture.date_echeance|date:"d/m/Y" }}</td>
+                                            <td>{{ facture.montant_total }} €</td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if facture.statut == 'payee' %}bg-success
+                                                    {% elif facture.statut == 'en_retard' %}bg-danger
+                                                    {% elif facture.statut == 'annulee' %}bg-secondary
+                                                    {% else %}bg-warning{% endif %}">
+                                                    {{ facture.get_statut_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" title="Télécharger PDF">
+                                                        <i class="bi bi-download"></i>
+                                                    </button>
+                                                    {% if facture.statut != 'payee' %}
+                                                    <button class="btn btn-outline-success" title="Marquer comme payée"
+                                                            data-action="payer" data-facture-id="{{ facture.id }}">
+                                                        <i class="bi bi-check"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center mt-3">
+                                <a href="{% url 'liste_factures_admin' %}?membre={{ membre.id }}" 
+                                   class="btn btn-outline-primary" id="voir-toutes-factures">
+                                    <i class="bi bi-eye"></i> Voir toutes les factures
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4" id="no-factures">
+                                <i class="bi bi-file-earmark-x display-4 text-muted"></i>
+                                <h6 class="mt-3">Aucune facture</h6>
+                                <p class="text-muted">Ce membre n'a pas encore de factures.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Onglet Événements -->
+                    <div class="tab-pane fade" id="evenements-panel" role="tabpanel">
+                        {% if evenements %}
+                            <div class="row">
+                                {% for evenement in evenements %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card evenement-card" data-evenement-id="{{ evenement.id }}">
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ evenement.nom }}</h6>
+                                            <p class="card-text">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-calendar"></i> {{ evenement.date_debut|date:"d/m/Y H:i" }}<br>
+                                                    <i class="bi bi-geo-alt"></i> {{ evenement.lieu }}
+                                                </small>
+                                            </p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-info">{{ evenement.prix }} €</span>
+                                                <button class="btn btn-sm btn-outline-primary"
+                                                        data-bs-toggle="modal" data-bs-target="#evenementModal"
+                                                        data-evenement-id="{{ evenement.id }}">
+                                                    <i class="bi bi-eye"></i> Détails
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="text-center mt-3">
+                                <a href="{% url 'liste_evenements_admin' %}?participant={{ membre.id }}" 
+                                   class="btn btn-outline-primary" id="voir-tous-evenements">
+                                    <i class="bi bi-eye"></i> Voir tous les événements
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4" id="no-evenements">
+                                <i class="bi bi-calendar-event display-4 text-muted"></i>
+                                <h6 class="mt-3">Aucun événement</h6>
+                                <p class="text-muted">Ce membre n'a participé à aucun événement.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Onglet Activité -->
+                    <div class="tab-pane fade" id="activite-panel" role="tabpanel">
+                        <div class="timeline" id="activite-timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-success"></div>
+                                <div class="timeline-content">
+                                    <h6>Membre créé</h6>
+                                    <p class="text-muted">{{ membre.date_joined|date:"d/m/Y à H:i" }}</p>
+                                </div>
+                            </div>
+                            {% if membre.last_login %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-info"></div>
+                                <div class="timeline-content">
+                                    <h6>Dernière connexion</h6>
+                                    <p class="text-muted">{{ membre.last_login|date:"d/m/Y à H:i" }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if dernieres_reservations %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-primary"></div>
+                                <div class="timeline-content">
+                                    <h6>Dernière réservation</h6>
+                                    <p class="text-muted">{{ dernieres_reservations.0.date_creation|date:"d/m/Y à H:i" }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="bi bi-exclamation-triangle text-warning display-4"></i>
+                    <h6 class="mt-3">Êtes-vous sûr de vouloir supprimer ce membre ?</h6>
+                    <p class="text-muted" id="membre-nom-suppression">
+                        Le membre "{{ membre.first_name }} {{ membre.last_name }}" sera définitivement supprimé.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </button>
+                <form method="post" action="{% url 'supprimer_membre_admin' membre.id %}" id="form-suppression">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger" id="confirm-delete">
+                        <i class="bi bi-trash"></i> Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal détails réservation -->
+<div class="modal fade" id="reservationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Détails de la réservation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="reservation-modal-content">
+                <!-- Contenu chargé dynamiquement -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal détails événement -->
+<div class="modal fade" id="evenementModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Détails de l'événement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="evenement-modal-content">
+                <!-- Contenu chargé dynamiquement -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast pour notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3" id="toast-container">
+    <div id="success-toast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-check-circle me-2"></i>
+                <span id="success-message">Action effectuée avec succès</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    
+    <div id="error-toast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-exclamation-circle me-2"></i>
+                <span id="error-message">Une erreur s'est produite</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialisation des modals
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
+    const evenementModal = new bootstrap.Modal(document.getElementById('evenementModal'));
+    const successToast = new bootstrap.Toast(document.getElementById('success-toast'));
+    const errorToast = new bootstrap.Toast(document.getElementById('error-toast'));
+
+    // Gestion des actions sur les réservations
+    document.querySelectorAll('[data-action]').forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const reservationId = this.dataset.reservationId;
+            const factureId = this.dataset.factureId;
+            
+            if (action && (reservationId || factureId)) {
+                handleAction(action, reservationId || factureId);
+            }
+        });
+    });
+
+    // Gestion des modals de détails
+    document.querySelectorAll('[data-bs-target="#reservationModal"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const reservationId = this.dataset.reservationId;
+            loadReservationDetails(reservationId);
+        });
+    });
+
+    document.querySelectorAll('[data-bs-target="#evenementModal"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const evenementId = this.dataset.evenementId;
+            loadEvenementDetails(evenementId);
+        });
+    });
+
+    // Actions du menu dropdown
+    document.getElementById('action-envoyer-email').addEventListener('click', function(e) {
+        e.preventDefault();
+        // Ouvrir modal d'envoi d'email ou rediriger
+        showSuccessToast('Fonctionnalité d\'envoi d\'email à implémenter');
+    });
+
+    document.getElementById('action-generer-facture').addEventListener('click', function(e) {
+        e.preventDefault();
+        // Logique de génération de facture
+        showSuccessToast('Génération de facture à implémenter');
+    });
+
+    document.getElementById('action-toggle-abonnement').addEventListener('click', function(e) {
+        e.preventDefault();
+        // Logique de basculement d'abonnement
+        toggleAbonnement();
+    });
+
+    // Fonctions utilitaires
+    function handleAction(action, itemId) {
+        console.log(`Action: ${action}, ID: ${itemId}`);
+        
+        // Ici vous pouvez ajouter les appels AJAX
+        switch(action) {
+            case 'confirmer':
+                showSuccessToast('Réservation confirmée');
+                break;
+            case 'annuler':
+                showSuccessToast('Réservation annulée');
+                break;
+            case 'payer':
+                showSuccessToast('Facture marquée comme payée');
+                break;
+        }
+    }
+
+    function loadReservationDetails(reservationId) {
+        // Charger les détails de la réservation via AJAX
+        document.getElementById('reservation-modal-content').innerHTML = `
+            <div class="text-center p-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+            </div>
+        `;
+        
+        // Simulation du chargement
+        setTimeout(() => {
+            document.getElementById('reservation-modal-content').innerHTML = `
+                <p>Détails de la réservation ID: ${reservationId}</p>
+                <p>Contenu à charger via AJAX...</p>
+            `;
+        }, 1000);
+    }
+
+    function loadEvenementDetails(evenementId) {
+        // Charger les détails de l'événement via AJAX
+        document.getElementById('evenement-modal-content').innerHTML = `
+            <div class="text-center p-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+            </div>
+        `;
+        
+        // Simulation du chargement
+        setTimeout(() => {
+            document.getElementById('evenement-modal-content').innerHTML = `
+                <p>Détails de l'événement ID: ${evenementId}</p>
+                <p>Contenu à charger via AJAX...</p>
+            `;
+        }, 1000);
+    }
+
+    function toggleAbonnement() {
+        // Logique pour activer/désactiver l'abonnement
+        const badge = document.getElementById('badge-statut');
+        const actionLink = document.getElementById('action-toggle-abonnement');
+        
+        if (badge.classList.contains('bg-success')) {
+            badge.classList.remove('bg-success');
+            badge.classList.add('bg-danger');
+            badge.textContent = 'Inactif';
+            actionLink.innerHTML = '<i class="bi bi-toggle-on"></i> Activer l\'abonnement';
+            showSuccessToast('Abonnement désactivé');
+        } else {
+            badge.classList.remove('bg-danger');
+            badge.classList.add('bg-success');
+            badge.textContent = 'Actif';
+            actionLink.innerHTML = '<i class="bi bi-toggle-on"></i> Désactiver l\'abonnement';
+            showSuccessToast('Abonnement activé');
+        }
+    }
+
+    function showSuccessToast(message) {
+        document.getElementById('success-message').textContent = message;
+        successToast.show();
+    }
+
+    function showErrorToast(message) {
+        document.getElementById('error-message').textContent = message;
+        errorToast.show();
+    }
+
+   
+    // Initialisation des tooltips si Bootstrap est chargé
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+});
+</script>
+
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.membre-row:hover {
+    background-color: #f8f9fa;
+}
+
+.membre-card {
+    transition: transform 0.2s;
+}
+
+.membre-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.toast-container {
+    z-index: 1060;
+}
+
+.btn-group .btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+@media (max-width: 768px) {
+    .avatar-circle {
+        width: 35px;
+        height: 35px;
+        font-size: 12px;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.4rem;
+    }
+}
+</style>
+
+{% endblock %}

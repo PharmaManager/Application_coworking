@@ -1,0 +1,256 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Modifier le statut de la réservation{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- En-tête -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">Modifier le statut de la réservation</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'liste_reservations_admin' %}">Réservations</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'detail_reservation_admin' reservation.id %}">Détail</a></li>
+                            <li class="breadcrumb-item active">Modifier statut</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="btn-toolbar">
+                    <a href="{% url 'detail_reservation_admin' reservation.id %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Retour au détail
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Modification du statut</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Résumé de la réservation -->
+                    <div class="reservation-summary bg-light p-3 rounded mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-2">Informations de la réservation</h6>
+                                <p class="mb-1"><strong>Membre:</strong> {{ reservation.membre.first_name }} {{ reservation.membre.last_name }}</p>
+                                <p class="mb-1"><strong>Espace:</strong> {{ reservation.espace.nom }}</p>
+                                <p class="mb-1"><strong>Date:</strong> {{ reservation.date_debut|date:"d/m/Y" }}</p>
+                                <p class="mb-0"><strong>Horaire:</strong> {{ reservation.date_debut|time:"H:i" }} - {{ reservation.date_fin|time:"H:i" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-2">Statut actuel</h6>
+                                <span class="badge 
+                                    {% if reservation.statut == 'confirmee' %}bg-success
+                                    {% elif reservation.statut == 'en_attente' %}bg-warning
+                                    {% else %}bg-danger
+                                    {% endif %} fs-6" id="current-status">
+                                    {{ reservation.get_statut_display }}
+                                </span>
+                                <p class="mt-2 mb-0"><strong>Prix total:</strong> {{ reservation.prix_total }}€</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulaire de modification -->
+                    <form method="post" id="status-form">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="statut" class="form-label"><strong>Nouveau statut</strong></label>
+                            <select class="form-select form-select-lg" id="statut" name="statut" required>
+                                <option value="">Sélectionner un statut</option>
+                                {% for statut_code, statut_label in statuts %}
+                                <option value="{{ statut_code }}" 
+                                    {% if statut_code == reservation.statut %}selected{% endif %}
+                                    data-description="{{ statut_label }}">
+                                    {{ statut_label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Le membre sera automatiquement notifié du changement de statut.</div>
+                        </div>
+
+                        <!-- Aperçu du changement -->
+                        <div class="status-preview p-3 border rounded mb-4" id="status-preview" style="display: none;">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <span class="badge bg-secondary" id="old-status-badge">{{ reservation.get_statut_display }}</span>
+                                </div>
+                                <div class="me-3">
+                                    <i class="bi bi-arrow-right text-muted"></i>
+                                </div>
+                                <div class="me-3">
+                                    <span class="badge" id="new-status-badge"></span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <small class="text-muted" id="status-description"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions de confirmation -->
+                        <div class="confirmation-section" id="confirmation-section" style="display: none;">
+                            <div class="alert alert-warning" role="alert">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Attention :</strong> Cette action va modifier le statut de la réservation et envoyer une notification au membre.
+                            </div>
+
+                            <!-- Zone de commentaire optionnel -->
+                            <div class="mb-3">
+                                <label for="comment" class="form-label">Commentaire (optionnel)</label>
+                                <textarea class="form-control" id="comment" name="comment" rows="3" 
+                                    placeholder="Ajouter un commentaire expliquant le changement de statut..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'detail_reservation_admin' reservation.id %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Annuler
+                            </a>
+                            <button type="button" class="btn btn-warning" id="preview-btn">
+                                <i class="bi bi-eye"></i> Prévisualiser
+                            </button>
+                            <button type="submit" class="btn btn-success" id="confirm-btn" style="display: none;">
+                                <i class="bi bi-check-circle"></i> Confirmer la modification
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Historique des modifications -->
+            <div class="card shadow mt-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Historique des modifications</h6>
+                </div>
+                <div class="card-body">
+                    {% if reservation.historiquereservation_set.all %}
+                    <div class="timeline">
+                        {% for historique in reservation.historiquereservation_set.all %}
+                        <div class="timeline-item mb-3">
+                            <div class="d-flex">
+                                <div class="timeline-marker me-3">
+                                    <i class="bi bi-clock-history text-muted"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">{{ historique.action }}</h6>
+                                            <small class="text-muted">{{ historique.date_action|date:"d/m/Y H:i" }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted">
+                        <i class="bi bi-clock-history" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Aucun historique de modification</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statutSelect = document.getElementById('statut');
+    const previewDiv = document.getElementById('status-preview');
+    const confirmationSection = document.getElementById('confirmation-section');
+    const previewBtn = document.getElementById('preview-btn');
+    const confirmBtn = document.getElementById('confirm-btn');
+    const newStatusBadge = document.getElementById('new-status-badge');
+    const statusDescription = document.getElementById('status-description');
+    
+    // Définition des couleurs pour les statuts
+    const statutColors = {
+        'confirmee': 'bg-success',
+        'en_attente': 'bg-warning',
+        'annulee': 'bg-danger'
+    };
+    
+    // Définition des descriptions pour les statuts
+    const statutDescriptions = {
+        'confirmee': 'La réservation est confirmée et validée',
+        'en_attente': 'La réservation est en attente de validation',
+        'annulee': 'La réservation a été annulée'
+    };
+    
+    // Gestion de la sélection du statut
+    statutSelect.addEventListener('change', function() {
+        const selectedValue = this.value;
+        const currentStatus = '{{ reservation.statut }}';
+        
+        if (selectedValue && selectedValue !== currentStatus) {
+            // Afficher le bouton prévisualiser
+            previewBtn.style.display = 'inline-block';
+            confirmBtn.style.display = 'none';
+            confirmationSection.style.display = 'none';
+            previewDiv.style.display = 'none';
+        } else {
+            // Masquer tout si pas de changement
+            previewBtn.style.display = 'none';
+            confirmBtn.style.display = 'none';
+            confirmationSection.style.display = 'none';
+            previewDiv.style.display = 'none';
+        }
+    });
+    
+    // Gestion du bouton prévisualiser
+    previewBtn.addEventListener('click', function() {
+        const selectedValue = statutSelect.value;
+        const selectedOption = statutSelect.options[statutSelect.selectedIndex];
+        
+        if (selectedValue) {
+            // Mettre à jour l'aperçu
+            newStatusBadge.className = 'badge ' + statutColors[selectedValue];
+            newStatusBadge.textContent = selectedOption.textContent;
+            statusDescription.textContent = statutDescriptions[selectedValue];
+            
+            // Afficher l'aperçu et la section de confirmation
+            previewDiv.style.display = 'block';
+            confirmationSection.style.display = 'block';
+            confirmBtn.style.display = 'inline-block';
+            
+            // Masquer le bouton prévisualiser
+            previewBtn.style.display = 'none';
+        }
+    });
+    
+    // Gestion de la soumission du formulaire
+    document.getElementById('status-form').addEventListener('submit', function(e) {
+        const selectedValue = statutSelect.value;
+        const currentStatus = '{{ reservation.statut }}';
+        
+        if (selectedValue === currentStatus) {
+            e.preventDefault();
+            alert('Veuillez sélectionner un statut différent du statut actuel.');
+            return false;
+        }
+        
+        // Confirmation finale
+        const selectedOption = statutSelect.options[statutSelect.selectedIndex];
+        if (!confirm(`Êtes-vous sûr de vouloir changer le statut vers "${selectedOption.textContent}" ?`)) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Afficher un indicateur de chargement
+        confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Modification en cours...';
+        confirmBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}

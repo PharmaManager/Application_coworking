@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - Espace de Coworking</title>
+  <style>
+     :root {
+    /* Couleurs principales */
+    --color-primary: #1E3A8A; /* Bleu profond, sérieux et professionnel */
+    --color-secondary: #64748B; /* Gris-bleu, pour les textes ou éléments secondaires */
+    --color-accent: #F59E0B; /* Jaune/orangé, pour les boutons ou alertes */
+    --color-background: #F8FAFC; /* Très clair, pour le fond des pages */
+    --color-surface: #FFFFFF; /* Blanc pour cartes et sections */
+    --color-success: #16A34A; /* Vert pour succès */
+    --color-error: #DC2626; /* Rouge pour erreurs */
+    --color-warning: #FBBF24; /* Jaune pour alertes */
+    --color-info: #0EA5E9; /* Bleu clair pour infos */
+    
+    /* Textes */
+    --text-primary: #111827; /* Noir-gris foncé pour texte principal */
+    --text-secondary: #475569; /* Gris pour texte secondaire */
+    
+    /* Ombres et effets */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    
+    /* Bordures */
+    --border-radius-sm: 0.375rem;
+    --border-radius-md: 0.5rem;
+    --border-radius-lg: 0.75rem;
+    --border-radius-xl: 1rem;
+    --border-radius-2xl: 1.5rem;
+    
+    /* Transitions */
+    --transition-fast: all 0.15s ease-in-out;
+    --transition-normal: all 0.3s ease-in-out;
+    --transition-slow: all 0.5s ease-in-out;
+    
+    /* Espacements */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+}
+
+/* Reset et base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, var(--color-background) 0%, #E2E8F0 50%, var(--color-background) 100%);
+    min-height: 100vh;
+    line-height: 1.6;
+    color: var(--text-primary);
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Effet de fond animé */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 25% 25%, rgba(30, 58, 138, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(100, 116, 139, 0.03) 0%, transparent 70%);
+    z-index: -1;
+    animation: backgroundShift 20s ease-in-out infinite;
+}
+
+@keyframes backgroundShift {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Container principal */
+.container-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.header-container {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(30, 58, 138, 0.1);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+    animation: slideDown 0.6s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.site-title {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.025em;
+}
+
+.nav-container {
+    display: flex;
+    gap: var(--spacing-lg);
+}
+
+.nav-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(30, 58, 138, 0.1), transparent);
+    transition: var(--transition-slow);
+}
+
+.nav-link:hover {
+    color: var(--color-primary);
+    background-color: rgba(30, 58, 138, 0.05);
+    transform: translateY(-1px);
+}
+
+.nav-link:hover::before {
+    left: 100%;
+}
+
+/* Main content */
+.main-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-xl);
+}
+
+/* Section inscription */
+.inscription-container {
+    background: var(--color-surface);
+    border-radius: var(--border-radius-2xl);
+    box-shadow: var(--shadow-xl);
+    padding: var(--spacing-2xl);
+    width: 100%;
+    max-width: 800px;
+    position: relative;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: slideUp 0.8s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.inscription-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    transition: var(--transition-normal);
+}
+
+/* Header d'inscription */
+.inscription-header {
+    text-align: center;
+    margin-bottom: var(--spacing-2xl);
+    animation: fadeIn 1s ease-out 0.3s both;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.inscription-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-md);
+    position: relative;
+    letter-spacing: -0.025em;
+}
+
+.inscription-title::after {
+    content: '';
+    position: absolute;
+    bottom: -var(--spacing-sm);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+    border-radius: 2px;
+}
+
+.inscription-subtitle {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+    line-height: 1.7;
+}
+
+/* Messages d'alerte */
+.messages-container {
+    margin-bottom: var(--spacing-xl);
+}
+
+.alert {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    margin-bottom: var(--spacing-md);
+    font-weight: 500;
+    border-left: 4px solid;
+    animation: slideInRight 0.5s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.alert::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% { right: -100%; }
+    100% { right: 100%; }
+}
+
+.alert-success {
+    background-color: rgba(22, 163, 74, 0.1);
+    border-left-color: var(--color-success);
+    color: var(--color-success);
+}
+
+.alert-error {
+    background-color: rgba(220, 38, 38, 0.1);
+    border-left-color: var(--color-error);
+    color: var(--color-error);
+}
+
+.alert-warning {
+    background-color: rgba(251, 191, 36, 0.1);
+    border-left-color: var(--color-warning);
+    color: #B45309;
+}
+
+.alert-info {
+    background-color: rgba(14, 165, 233, 0.1);
+    border-left-color: var(--color-info);
+    color: var(--color-info);
+}
+
+/* Formulaire d'inscription */
+.inscription-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+}
+
+.form-section {
+    animation: fadeInUp 0.6s ease-out;
+    animation-fill-mode: both;
+}
+
+.form-section:nth-child(1) { animation-delay: 0.1s; }
+.form-section:nth-child(2) { animation-delay: 0.2s; }
+.form-section:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-lg);
+    position: relative;
+    padding-left: var(--spacing-md);
+}
+
+.section-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    border-radius: 2px;
+}
+
+/* Groupes de formulaire */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-half {
+    margin-bottom: 0;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    letter-spacing: 0.025em;
+    position: relative;
+}
+
+/* Styles des champs de saisie */
+.inscription-form input[type="text"],
+.inscription-form input[type="email"],
+.inscription-form input[type="password"],
+.inscription-form input[type="tel"],
+.inscription-form select {
+    width: 100%;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: 2px solid #E5E7EB;
+    border-radius: var(--border-radius-lg);
+    font-size: 1rem;
+    background-color: var(--color-surface);
+    color: var(--text-primary);
+    transition: var(--transition-normal);
+    outline: none;
+    position: relative;
+}
+
+.inscription-form input:focus,
+.inscription-form select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+    transform: translateY(-1px);
+    background-color: rgba(30, 58, 138, 0.02);
+}
+
+.inscription-form input:hover,
+.inscription-form select:hover {
+    border-color: var(--color-secondary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.inscription-form input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.inscription-form select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right var(--spacing-md) center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: calc(var(--spacing-lg) + 2rem);
+}
+
+.inscription-form select:focus {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%231E3A8A' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+}
+
+/* Section des actions */
+.form-actions {
+    display: flex;
+    gap: var(--spacing-lg);
+    justify-content: center;
+    align-items: center;
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-xl);
+    border-top: 1px solid rgba(30, 58, 138, 0.1);
+}
+
+/* Boutons */
+.btn {
+    padding: var(--spacing-md) var(--spacing-xl);
+    border-radius: var(--border-radius-lg);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 0.025em;
+    border: none;
+    min-width: 160px;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: var(--transition-slow);
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, #1E40AF 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1E40AF 0%, var(--color-primary) 100%);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.3);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--color-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-secondary:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.3);
+}
+
+/* Footer */
+.footer-container {
+    background: rgba(30, 58, 138, 0.05);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    text-align: center;
+    border-top: 1px solid rgba(30, 58, 138, 0.1);
+    animation: fadeIn 0.8s ease-out 0.5s both;
+}
+
+.footer-text {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* États de validation des champs */
+.inscription-form input:valid:not(:placeholder-shown) {
+    border-color: var(--color-success);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2316A34A'%3e%3cpath fill-rule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clip-rule='evenodd'/%3e%3c/svg%3e");
+    background-position: right var(--spacing-md) center;
+    background-repeat: no-repeat;
+    background-size: 1.25rem;
+    padding-right: calc(var(--spacing-lg) + 2rem);
+}
+
+.inscription-form input:invalid:not(:placeholder-shown):not(:focus) {
+    border-color: var(--color-error);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23DC2626'%3e%3cpath fill-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z' clip-rule='evenodd'/%3e%3c/svg%3e");
+    background-position: right var(--spacing-md) center;
+    background-repeat: no-repeat;
+    background-size: 1.25rem;
+    padding-right: calc(var(--spacing-lg) + 2rem);
+}
+
+/* Loading state pour le bouton */
+.btn-primary.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+/* Responsivité */
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        text-align: center;
+    }
+    
+    .nav-container {
+        justify-content: center;
+    }
+    
+    .main-container {
+        padding: var(--spacing-md);
+    }
+    
+    .inscription-container {
+        padding: var(--spacing-xl);
+    }
+    
+    .inscription-title {
+        font-size: 2rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .inscription-container {
+        margin: var(--spacing-md);
+        padding: var(--spacing-lg);
+    }
+    
+    .inscription-title {
+        font-size: 1.75rem;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+    }
+    
+    .site-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* Amélioration de l'accessibilité */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus visible pour l'accessibilité */
+*:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+/* Masquer les icônes de validation sur les champs select */
+.inscription-form select:valid,
+.inscription-form select:invalid {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    padding-right: calc(var(--spacing-lg) + 2rem);
+}
+
+/* Effet de parallax subtil */
+@media (min-width: 1024px) {
+    .inscription-container {
+        transform-style: preserve-3d;
+    }
+    
+    .inscription-container:hover .inscription-header {
+        transform: translateZ(10px);
+    }
+    
+    .inscription-container:hover .form-section {
+        transform: translateZ(5px);
+    }
+}
+
+/* Animation de progression pour les sections */
+.form-section {
+    position: relative;
+}
+
+.form-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -2rem;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    opacity: 0;
+    animation: progressLine 1s ease-out 0.5s forwards;
+}
+
+@keyframes progressLine {
+    from {
+        opacity: 0;
+        height: 0;
+    }
+    to {
+        opacity: 1;
+        height: 100%;
+    }
+}
+
+
+
+  </style>
+
+      <style>
+        .pricing-info {
+            display: none;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 6px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+
+        .price-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .payment-methods {
+            margin-top: 15px;
+        }
+
+        .payment-method {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 5px 10px;
+            margin: 3px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="page-inscription" class="container-page">
+
+        <header id="header-main" class="header-container">
+            <h1 id="site-title" class="site-title">CoWorkSpace</h1>
+            <nav id="nav-main" class="nav-container">
+                <a href="{% url 'accueil' %}"  class="nav-link">Accueil</a>
+                <a href="{% url 'inscription' %}"  class="nav-link">Connexion</a>
+            </nav>
+        </header>
+
+        <main id="main-content" class="main-container">
+            <section id="inscription-section" class="inscription-container">
+
+                <div id="inscription-header" class="inscription-header">
+                    <h2 id="inscription-title" class="inscription-title">Rejoignez notre espace de coworking</h2>
+                    <p id="inscription-subtitle" class="inscription-subtitle">Créez votre compte pour accéder à tous nos services</p>
+                </div>
+
+                {% if messages %}
+                <div id="messages-container" class="messages-container">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="post" id="inscription-form" class="inscription-form">
+                    {% csrf_token %}
+
+                    <div id="personal-info" class="form-section personal-info">
+                        <h3 class="section-title">Informations personnelles</h3>
+
+                        <div class="form-group">
+                            <label for="{{ user_form.username.id_for_label }}" class="form-label">Nom d'utilisateur :</label>
+                            {{ user_form.username }}
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group form-half">
+                                <label for="{{ user_form.first_name.id_for_label }}" class="form-label">Prénom :</label>
+                                {{ user_form.first_name }}
+                            </div>
+                            <div class="form-group form-half">
+                                <label for="{{ user_form.last_name.id_for_label }}" class="form-label">Nom :</label>
+                                {{ user_form.last_name }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ user_form.email.id_for_label }}" class="form-label">Adresse email :</label>
+                            {{ user_form.email }}
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group form-half">
+                                <label for="{{ user_form.password1.id_for_label }}" class="form-label">Mot de passe :</label>
+                                {{ user_form.password1 }}
+                            </div>
+                            <div class="form-group form-half">
+                                <label for="{{ user_form.password2.id_for_label }}" class="form-label">Confirmer le mot de passe :</label>
+                                {{ user_form.password2 }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="professional-info" class="form-section professional-info">
+                        <h3 class="section-title">Informations professionnelles</h3>
+
+                        <div class="form-group">
+                            <label for="{{ profil_form.telephone.id_for_label }}" class="form-label">Téléphone :</label>
+                            {{ profil_form.telephone }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ profil_form.entreprise.id_for_label }}" class="form-label">Entreprise :</label>
+                            {{ profil_form.entreprise }}
+                        </div>
+
+                      
+                        <!-- Partie à ajouter après le champ type_abonnement dans votre formulaire -->
+                        <div class="form-group">
+                            <label for="{{ profil_form.type_abonnement.id_for_label }}" class="form-label">Type d'abonnement :</label>
+                            {{ profil_form.type_abonnement }}
+                            
+                            <!-- Section des tarifs (à ajouter) -->
+                            <div id="pricing-info" class="pricing-info">
+                                <div id="pricing-details" class="pricing-card">
+                                    <h4 id="subscription-name"></h4>
+                                    <div class="price-amount" id="price-display"></div>
+                                    <div id="subscription-description"></div>
+                                </div>
+                                
+                                <div class="payment-methods">
+                                    <strong>Moyens de paiement acceptés :</strong><br>
+                                    <span class="payment-method">💳 Carte bancaire</span>
+                                    <span class="payment-method">💰 Espèces</span>
+                                    <span class="payment-method">🏦 Virement</span>
+                                    <span class="payment-method">📱 PayPal</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div id="form-actions" class="form-section form-actions">
+                        <button type="submit" id="submit-btn" class="btn btn-primary">S'inscrire</button>
+                        <a href="{% url 'login' %}" id="login-link" class="btn btn-secondary">Déjà inscrit ? Se connecter</a>
+                    </div>
+
+                </form>
+            </section>
+        </main>
+
+        <footer id="footer-main" class="footer-container">
+            <p id="footer-text" class="footer-text">&copy; 2025 CoWorkSpace - Espace de coworking moderne</p>
+        </footer>
+
+    </div>
+
+    <script>
+        // Script pour améliorer l'expérience utilisateur
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('inscription-form');
+            const submitBtn = document.getElementById('submit-btn');
+            
+            // Validation côté client basique
+            form.addEventListener('submit', function(e) {
+                submitBtn.textContent = 'Inscription en cours...';
+                submitBtn.disabled = true;
+            });
+
+            // Masquer les messages après quelques secondes
+            const messages = document.querySelectorAll('.alert');
+            messages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.display = 'none';
+                }, 5000);
+            });
+        });
+    </script>
+
+    <script>
+// JavaScript à ajouter
+document.addEventListener('DOMContentLoaded', function() {
+    const typeAbonnementSelect = document.getElementById('id_type_abonnement'); // Ajustez l'ID selon votre form
+    const pricingInfo = document.getElementById('pricing-info');
+    const subscriptionName = document.getElementById('subscription-name');
+    const priceDisplay = document.getElementById('price-display');
+    const subscriptionDescription = document.getElementById('subscription-description');
+
+    // Définition des tarifs
+    const pricingData = {
+        'jour': {
+            name: 'Abonnement Journalier',
+            price: '25€ / jour',
+            description: 'Accès complet pour une journée de travail'
+        },
+        'semaine': {
+            name: 'Abonnement Hebdomadaire',
+            price: '120€ / semaine',
+            description: 'Accès illimité pendant 7 jours consécutifs'
+        },
+        'mois': {
+            name: 'Abonnement Mensuel',
+            price: '350€ / mois',
+            description: 'Accès complet pendant 30 jours + avantages premium'
+        },
+        'annuel': {
+            name: 'Abonnement Annuel',
+            price: '3200€ / an',
+            description: 'Économisez 25% avec notre forfait annuel + tous les avantages'
+        }
+    };
+
+    function updatePricing() {
+        const selectedType = typeAbonnementSelect.value;
+        
+        if (selectedType && pricingData[selectedType]) {
+            const data = pricingData[selectedType];
+            
+            subscriptionName.textContent = data.name;
+            priceDisplay.textContent = data.price;
+            subscriptionDescription.textContent = data.description;
+            
+            pricingInfo.style.display = 'block';
+        } else {
+            pricingInfo.style.display = 'none';
+        }
+    }
+
+    // Écouter les changements de sélection
+    typeAbonnementSelect.addEventListener('change', updatePricing);
+    
+    // Vérifier la sélection initiale
+    updatePricing();
+});
+</script>
+
+</body>
+</html>

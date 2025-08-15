@@ -1,0 +1,243 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}{{ espace.nom }} - Administration{% endblock %}
+
+{% block page_title %}Détail de l'espace : {{ espace.nom }}{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'liste_espaces_admin' %}">Espaces</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ espace.nom }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group me-2">
+    <a href="{% url 'modifier_espace_admin' espace.id %}" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-pencil"></i> Modifier
+    </a>
+    <a href="{% url 'liste_espaces_admin' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Informations principales -->
+    <div class="col-md-8">
+        <div class="card mb-4" id="espace-info-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle me-2"></i>Informations de l'espace
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-group mb-3">
+                            <label class="info-label">Nom :</label>
+                            <span class="info-value">{{ espace.nom }}</span>
+                        </div>
+                        <div class="info-group mb-3">
+                            <label class="info-label">Type d'espace :</label>
+                            <span class="info-value">{{ espace.type_espace.nom }}</span>
+                        </div>
+                        <div class="info-group mb-3">
+                            <label class="info-label">Capacité :</label>
+                            <span class="info-value">{{ espace.capacite }} personne{{ espace.capacite|pluralize }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-group mb-3">
+                            <label class="info-label">Prix par heure :</label>
+                            <span class="info-value">{{ espace.prix_heure }} MAD</span>
+                        </div>
+                        <div class="info-group mb-3">
+                            <label class="info-label">Statut :</label>
+                            {% if espace.disponible %}
+                                <span class="badge bg-success">Disponible</span>
+                            {% else %}
+                                <span class="badge bg-danger">Indisponible</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                {% if espace.equipements %}
+                <div class="info-group mb-3">
+                    <label class="info-label">Équipements :</label>
+                    <div class="equipements-container">
+                        {{ espace.equipements|linebreaks }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if espace.type_espace.description %}
+                <div class="info-group mb-3">
+                    <label class="info-label">Description du type :</label>
+                    <div class="description-container">
+                        {{ espace.type_espace.description|linebreaks }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Réservations récentes -->
+        <div class="card" id="reservations-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-calendar-check me-2"></i>Réservations récentes
+                </h5>
+                <a href="{% url 'liste_reservations_admin' %}?espace={{ espace.id }}" class="btn btn-sm btn-outline-primary">
+                    Voir toutes
+                </a>
+            </div>
+            <div class="card-body">
+                {% if reservations_recentes %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="reservations-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Membre</th>
+                                <th>Date début</th>
+                                <th>Date fin</th>
+                                <th>Statut</th>
+                                <th>Prix</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reservation in reservations_recentes %}
+                            <tr class="reservation-row">
+                                <td>
+                                    <div class="membre-info">
+                                        <strong>{{ reservation.membre.get_full_name|default:reservation.membre.username }}</strong>
+                                    </div>
+                                </td>
+                                <td class="date-cell">{{ reservation.date_debut|date:"d/m/Y H:i" }}</td>
+                                <td class="date-cell">{{ reservation.date_fin|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if reservation.statut == 'confirmee' %}
+                                        <span class="badge bg-success">Confirmée</span>
+                                    {% elif reservation.statut == 'en_attente' %}
+                                        <span class="badge bg-warning">En attente</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Annulée</span>
+                                    {% endif %}
+                                </td>
+                                <td class="prix-cell">{{ reservation.prix_total }} MAD</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="#" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4" id="no-reservations">
+                    <i class="bi bi-calendar-x display-4"></i>
+                    <p class="mt-2">Aucune réservation pour cet espace</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar avec statistiques -->
+    <div class="col-md-4">
+        <div class="card mb-4" id="stats-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up me-2"></i>Statistiques
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="stat-item mb-3" id="stat-total">
+                    <div class="stat-value">{{ total_reservations }}</div>
+                    <div class="stat-label">Réservations totales</div>
+                </div>
+                <div class="stat-item mb-3" id="stat-mois">
+                    <div class="stat-value">{{ reservations_mois }}</div>
+                    <div class="stat-label">Réservations ce mois</div>
+                </div>
+                <div class="stat-item" id="stat-taux">
+                    <div class="stat-value">
+                        {% if total_reservations > 0 %}
+                            {{ reservations_mois|floatformat:0 }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </div>
+                    <div class="stat-label">Taux d'occupation</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="card" id="actions-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-lightning me-2"></i>Actions rapides
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'modifier_espace_admin' espace.id %}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-2"></i>Modifier l'espace
+                    </a>
+                    <button class="btn btn-outline-secondary" id="btn-toggle-disponibilite">
+                        <i class="bi bi-toggle-{% if espace.disponible %}on{% else %}off{% endif %} me-2"></i>
+                        {% if espace.disponible %}Rendre indisponible{% else %}Rendre disponible{% endif %}
+                    </button>
+                    <a href="{% url 'liste_reservations_admin' %}?espace={{ espace.id }}" class="btn btn-outline-info">
+                        <i class="bi bi-calendar-check me-2"></i>Voir réservations
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion du bouton de disponibilité
+    const toggleBtn = document.getElementById('btn-toggle-disponibilite');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            if (confirm('Êtes-vous sûr de vouloir modifier la disponibilité de cet espace ?')) {
+                // Ici vous pouvez ajouter l'appel AJAX pour modifier la disponibilité
+                // ou rediriger vers une URL de modification
+                window.location.href = "{% url 'modifier_espace_admin' espace.id %}";
+            }
+        });
+    }
+
+    // Animation des cartes statistiques au hover
+    const statItems = document.querySelectorAll('.stat-item');
+    statItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.05)';
+            this.style.transition = 'transform 0.2s ease';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+});
+</script>
+{% endblock %}

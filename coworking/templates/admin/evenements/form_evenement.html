@@ -1,0 +1,399 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}{{ action }} un événement - Administration{% endblock %}
+
+{% block page_title %}{{ action }} un événement{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb" class="breadcrumb-nav">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'liste_evenements_admin' %}">Événements</a></li>
+        {% if evenement %}
+        <li class="breadcrumb-item"><a href="{% url 'detail_evenement_admin' evenement.id %}">{{ evenement.nom }}</a></li>
+        <li class="breadcrumb-item active">Modifier</li>
+        {% else %}
+        <li class="breadcrumb-item active">Créer</li>
+        {% endif %}
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group me-2">
+    <a href="{% url 'liste_evenements_admin' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour à la liste
+    </a>
+    {% if evenement %}
+    <a href="{% url 'detail_evenement_admin' evenement.id %}" class="btn btn-sm btn-outline-info">
+        <i class="bi bi-eye"></i> Voir détails
+    </a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm form-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-calendar-event"></i> 
+                    {% if action == 'Modifier' %}
+                        Modification de "{{ evenement.nom }}"
+                    {% else %}
+                        Création d'un nouvel événement
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" class="evenement-form" id="evenement-form" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Informations générales -->
+                    <div class="form-section mb-4">
+                        <h6 class="section-title text-primary border-bottom pb-2 mb-3">
+                            <i class="bi bi-info-circle"></i> Informations générales
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.nom.id_for_label }}" class="form-label required">
+                                        Nom de l'événement
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-bookmark"></i></span>
+                                        {{ form.nom }}
+                                    </div>
+                                    {% if form.nom.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.nom.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.prix.id_for_label }}" class="form-label required">
+                                        Prix (€)
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-currency-euro"></i></span>
+                                        {{ form.prix }}
+                                    </div>
+                                    {% if form.prix.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.prix.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label required">
+                                Description
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Décrivez l'événement, son programme, ses objectifs...
+                            </small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.lieu.id_for_label }}" class="form-label required">
+                                        Lieu
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                        {{ form.lieu }}
+                                    </div>
+                                    {% if form.lieu.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.lieu.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.places_max.id_for_label }}" class="form-label required">
+                                        Places maximum
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-people"></i></span>
+                                        {{ form.places_max }}
+                                    </div>
+                                    {% if form.places_max.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.places_max.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Planning -->
+                    <div class="form-section mb-4">
+                        <h6 class="section-title text-primary border-bottom pb-2 mb-3">
+                            <i class="bi bi-calendar3"></i> Planning
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.date_debut.id_for_label }}" class="form-label required">
+                                        Date et heure de début
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-calendar-check"></i></span>
+                                        {{ form.date_debut }}
+                                    </div>
+                                    {% if form.date_debut.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.date_debut.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.date_fin.id_for_label }}" class="form-label required">
+                                        Date et heure de fin
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-calendar-x"></i></span>
+                                        {{ form.date_fin }}
+                                    </div>
+                                    {% if form.date_fin.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.date_fin.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Durée calculée (affichage dynamique) -->
+                        <div class="alert alert-info duration-info d-none" id="duration-info">
+                            <i class="bi bi-clock"></i> 
+                            <strong>Durée calculée :</strong> 
+                            <span id="calculated-duration"></span>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="form-actions d-flex justify-content-between align-items-center pt-3 border-top">
+                        <div class="form-help">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i>
+                                Les champs marqués d'un <span class="text-danger">*</span> sont obligatoires
+                            </small>
+                        </div>
+                        
+                        <div class="btn-group">
+                            <a href="{% url 'liste_evenements_admin' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-save">
+                                <i class="bi bi-check-circle"></i> 
+                                {% if action == 'Modifier' %}
+                                    Mettre à jour
+                                {% else %}
+                                    Créer l'événement
+                                {% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Aide contextuelle -->
+        <div class="card mt-4 help-card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-question-circle"></i> Aide
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="help-title">Conseils pour créer un événement</h6>
+                        <ul class="help-list">
+                            <li>Choisissez un nom accrocheur et explicite</li>
+                            <li>Rédigez une description détaillée</li>
+                            <li>Vérifiez la disponibilité du lieu</li>
+                            <li>Adaptez le nombre de places au lieu choisi</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="help-title">Gestion des dates</h6>
+                        <ul class="help-list">
+                            <li>La date de fin doit être postérieure au début</li>
+                            <li>Prévoyez un délai raisonnable pour les inscriptions</li>
+                            <li>Pensez aux horaires d'accès du lieu</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('evenement-form');
+    const dateDebutInput = document.getElementById('{{ form.date_debut.id_for_label }}');
+    const dateFinInput = document.getElementById('{{ form.date_fin.id_for_label }}');
+    const durationInfo = document.getElementById('duration-info');
+    const calculatedDuration = document.getElementById('calculated-duration');
+
+    // Configuration des champs datetime-local
+    function setupDateTimeInputs() {
+        if (dateDebutInput && dateFinInput) {
+            // Format actuel pour les inputs datetime-local
+            const now = new Date();
+            const minDate = now.toISOString().slice(0, 16);
+            
+            dateDebutInput.setAttribute('min', minDate);
+            
+            // Mise à jour de la date min de fin quand début change
+            dateDebutInput.addEventListener('change', function() {
+                const startDate = new Date(this.value);
+                dateFinInput.setAttribute('min', this.value);
+                
+                // Si date fin antérieure à début, la réinitialiser
+                if (dateFinInput.value && new Date(dateFinInput.value) <= startDate) {
+                    const newEndDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // +2h par défaut
+                    dateFinInput.value = newEndDate.toISOString().slice(0, 16);
+                }
+                
+                calculateDuration();
+            });
+
+            dateFinInput.addEventListener('change', calculateDuration);
+        }
+    }
+
+    // Calcul et affichage de la durée
+    function calculateDuration() {
+        if (dateDebutInput.value && dateFinInput.value) {
+            const start = new Date(dateDebutInput.value);
+            const end = new Date(dateFinInput.value);
+            
+            if (end > start) {
+                const diffMs = end - start;
+                const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                
+                let durationText = '';
+                if (diffHours > 0) {
+                    durationText += diffHours + 'h';
+                }
+                if (diffMinutes > 0) {
+                    durationText += (diffHours > 0 ? ' ' : '') + diffMinutes + 'min';
+                }
+                
+                calculatedDuration.textContent = durationText || '0min';
+                durationInfo.classList.remove('d-none');
+            } else {
+                durationInfo.classList.add('d-none');
+            }
+        } else {
+            durationInfo.classList.add('d-none');
+        }
+    }
+
+    // Validation côté client
+    function validateForm() {
+        let isValid = true;
+        const requiredFields = form.querySelectorAll('input[required], textarea[required], select[required]');
+        
+        requiredFields.forEach(field => {
+            const value = field.value.trim();
+            if (!value) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.remove('is-invalid');
+                field.classList.add('is-valid');
+            }
+        });
+
+        // Validation des dates
+        if (dateDebutInput.value && dateFinInput.value) {
+            const start = new Date(dateDebutInput.value);
+            const end = new Date(dateFinInput.value);
+            
+            if (end <= start) {
+                dateFinInput.classList.add('is-invalid');
+                isValid = false;
+            }
+        }
+
+        return isValid;
+    }
+
+    // Gestion de la soumission
+    form.addEventListener('submit', function(e) {
+        const saveBtn = document.querySelector('.btn-save');
+        
+        if (!validateForm()) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Animation du bouton de sauvegarde
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enregistrement...';
+        
+        // Re-activer le bouton après 10 secondes (au cas où)
+        setTimeout(() => {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="bi bi-check-circle"></i> {{ action }} l\'événement';
+        }, 10000);
+    });
+
+    // Validation en temps réel
+    const inputs = form.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.hasAttribute('required')) {
+                if (this.value.trim()) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.add('is-invalid');
+                    this.classList.remove('is-valid');
+                }
+            }
+        });
+    });
+
+    // Initialisation
+    setupDateTimeInputs();
+    calculateDuration();
+
+    // Auto-resize pour les textareas
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+});
+</script>
+{% endblock %}

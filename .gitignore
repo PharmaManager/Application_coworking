@@ -1,0 +1,45 @@
+# Environnement virtuel
+VM/
+ENV/
+env/
+.venv/
+
+# Fichiers Python compilés
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Fichiers de logs
+*.log
+
+# Configurations locales
+*.env
+.env.*
+
+# Django stuff
+db.sqlite3
+media/
+staticfiles/
+
+# Migrations (si tu ne veux pas les versionner)
+**/migrations/*
+!**/migrations/__init__.py
+
+# VSCode / IDE
+.vscode/
+.idea/
+
+# Cache
+*.pot
+*.pyc
+.DS_Store
+Thumbs.db
+
+# Tests / coverage
+htmlcov/
+.coverage
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/

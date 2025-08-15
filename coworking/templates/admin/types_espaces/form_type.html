@@ -1,0 +1,389 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}{{ action }} un type d'espace - Administration{% endblock %}
+
+{% block page_title %}{{ action }} un type d'espace{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'liste_espaces_admin' %}">Espaces</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'liste_types_espaces_admin' %}">Types d'espaces</a></li>
+        {% if type_espace %}
+            <li class="breadcrumb-item active" aria-current="page">Modifier {{ type_espace.nom }}</li>
+        {% else %}
+            <li class="breadcrumb-item active" aria-current="page">Nouveau type</li>
+        {% endif %}
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group me-2">
+    <a href="{% url 'liste_types_espaces_admin' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour à la liste
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-6">
+        <div class="card" id="form-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-{% if type_espace %}pencil{% else %}plus-circle{% endif %} me-2"></i>
+                    {{ action }} un type d'espace
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="type-form" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Nom du type -->
+                    <div class="form-section mb-4" id="section-nom">
+                        <div class="form-group">
+                            <label for="{{ form.nom.id_for_label }}" class="form-label required">
+                                <i class="bi bi-tag me-1"></i>Nom du type d'espace
+                            </label>
+                            {{ form.nom }}
+                            {% if form.nom.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.nom.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Nom unique et descriptif du type d'espace (ex: Bureau privé, Salle de réunion, Open space...)
+                            </div>
+                            <div class="char-counter text-muted small" id="nom-counter">
+                                <span id="nom-count">0</span>/50 caractères
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-section mb-4" id="section-description">
+                        <div class="form-group">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="bi bi-file-text me-1"></i>Description
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Description détaillée du type d'espace et de son utilisation recommandée
+                            </div>
+                            <div class="char-counter text-muted small" id="description-counter">
+                                <span id="description-count">0</span> caractères
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Suggestions de types -->
+                    <div class="form-section mb-4" id="section-suggestions">
+                        <h6 class="form-section-title">
+                            <i class="bi bi-lightbulb me-2"></i>Suggestions de types d'espaces
+                        </h6>
+                        <div class="suggestions-grid">
+                            <div class="suggestion-item" data-nom="Bureau privé" data-description="Espace de travail individuel fermé, idéal pour la confidentialité et la concentration.">
+                                <div class="suggestion-header">
+                                    <i class="bi bi-door-closed"></i>
+                                    <strong>Bureau privé</strong>
+                                </div>
+                                <small class="text-muted">Espace individuel fermé</small>
+                            </div>
+                            <div class="suggestion-item" data-nom="Open space" data-description="Espace de travail ouvert et collaboratif, favorisant les échanges et le travail en équipe.">
+                                <div class="suggestion-header">
+                                    <i class="bi bi-people"></i>
+                                    <strong>Open space</strong>
+                                </div>
+                                <small class="text-muted">Espace collaboratif ouvert</small>
+                            </div>
+                            <div class="suggestion-item" data-nom="Salle de réunion" data-description="Espace équipé pour les réunions, présentations et sessions de travail en groupe.">
+                                <div class="suggestion-header">
+                                    <i class="bi bi-people-fill"></i>
+                                    <strong>Salle de réunion</strong>
+                                </div>
+                                <small class="text-muted">Pour réunions et présentations</small>
+                            </div>
+                            <div class="suggestion-item" data-nom="Espace détente" data-description="Zone de repos et de détente pour les pauses, équipée de mobilier confortable.">
+                                <div class="suggestion-header">
+                                    <i class="bi bi-cup-straw"></i>
+                                    <strong>Espace détente</strong>
+                                </div>
+                                <small class="text-muted">Zone de repos et pauses</small>
+                            </div>
+                            <div class="suggestion-item" data-nom="Cabine téléphonique" data-description="Espace isolé acoustiquement pour les appels téléphoniques et visioconférences.">
+                                <div class="suggestion-header">
+                                    <i class="bi bi-telephone"></i>
+                                    <strong>Cabine téléphonique</strong>
+                                </div>
+                                <small class="text-muted">Pour appels privés</small>
+                            </div>
+                            <div class="suggestion-item" data-nom="Salle de formation" data-description="Espace dédié aux formations, ateliers et séminaires, avec équipement de présentation.">
+                                <div class="suggestion-header">
+                                    <i class="bi bi-mortarboard"></i>
+                                    <strong>Salle de formation</strong>
+                                </div>
+                                <small class="text-muted">Pour formations et ateliers</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aperçu en temps réel -->
+                    <div class="form-section mb-4" id="section-preview">
+                        <h6 class="form-section-title">
+                            <i class="bi bi-eye me-2"></i>Aperçu
+                        </h6>
+                        <div class="preview-card">
+                            <div class="preview-header">
+                                <strong id="preview-nom">{{ type_espace.nom|default:"Nom du type" }}</strong>
+                            </div>
+                            <div class="preview-description text-muted" id="preview-description">
+                                {{ type_espace.description|default:"Description du type d'espace..." }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="form-actions mt-4 pt-4 border-top" id="form-actions">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-primary btn-lg" id="btn-submit">
+                                    <i class="bi bi-check-lg me-2"></i>{{ action }} le type
+                                </button>
+                                {% if type_espace %}
+                                <button type="button" class="btn btn-outline-secondary ms-2" id="btn-reset">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>Réinitialiser
+                                </button>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <a href="{% url 'liste_types_espaces_admin' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-lg me-2"></i>Annuler
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('type-form');
+    const submitBtn = document.getElementById('btn-submit');
+    const resetBtn = document.getElementById('btn-reset');
+    const nomField = document.getElementById('{{ form.nom.id_for_label }}');
+    const descriptionField = document.getElementById('{{ form.description.id_for_label }}');
+    const nomCounter = document.getElementById('nom-count');
+    const descriptionCounter = document.getElementById('description-count');
+    const previewNom = document.getElementById('preview-nom');
+    const previewDescription = document.getElementById('preview-description');
+    
+    // Compteurs de caractères et aperçu en temps réel
+    function updateCounters() {
+        if (nomField && nomCounter) {
+            nomCounter.textContent = nomField.value.length;
+            if (previewNom) {
+                previewNom.textContent = nomField.value || 'Nom du type';
+            }
+        }
+        
+        if (descriptionField && descriptionCounter) {
+            descriptionCounter.textContent = descriptionField.value.length;
+            if (previewDescription) {
+                previewDescription.textContent = descriptionField.value || 'Description du type d\'espace...';
+            }
+        }
+    }
+    
+    // Initialiser les compteurs
+    updateCounters();
+    
+    // Event listeners pour les compteurs
+    if (nomField) {
+        nomField.addEventListener('input', updateCounters);
+    }
+    if (descriptionField) {
+        descriptionField.addEventListener('input', updateCounters);
+    }
+    
+    // Suggestions
+    const suggestionItems = document.querySelectorAll('.suggestion-item');
+    suggestionItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const nom = this.getAttribute('data-nom');
+            const description = this.getAttribute('data-description');
+            
+            if (nomField && !nomField.value.trim()) {
+                nomField.value = nom;
+            }
+            if (descriptionField && !descriptionField.value.trim()) {
+                descriptionField.value = description;
+            }
+            
+            updateCounters();
+            
+            // Animation de confirmation
+            this.classList.add('suggestion-selected');
+            setTimeout(() => {
+                this.classList.remove('suggestion-selected');
+            }, 1000);
+        });
+    });
+    
+    // Validation du formulaire
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            // Validation du nom (requis)
+            if (nomField && !nomField.value.trim()) {
+                nomField.classList.add('is-invalid');
+                isValid = false;
+            } else if (nomField) {
+                nomField.classList.remove('is-invalid');
+                nomField.classList.add('is-valid');
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                nomField.focus();
+            } else {
+                // Animation du bouton
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Enregistrement...';
+                submitBtn.disabled = true;
+            }
+        });
+    }
+    
+    // Bouton de réinitialisation
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            if (confirm('Êtes-vous sûr de vouloir réinitialiser le formulaire ?')) {
+                form.reset();
+                updateCounters();
+                form.querySelectorAll('.is-valid, .is-invalid').forEach(field => {
+                    field.classList.remove('is-valid', 'is-invalid');
+                });
+            }
+        });
+    }
+    
+    // Validation en temps réel
+    if (nomField) {
+        nomField.addEventListener('blur', function() {
+            if (!this.value.trim()) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+        
+        nomField.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid') && this.value.trim()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    }
+    
+    // Animation des sections
+    const sections = document.querySelectorAll('.form-section');
+    sections.forEach((section, index) => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            section.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            section.style.opacity = '1';
+            section.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+    
+    // Hover effects pour les suggestions
+    suggestionItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.02)';
+            this.style.transition = 'transform 0.2s ease';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+});
+</script>
+
+<style>
+.suggestions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.suggestion-item {
+    padding: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.suggestion-item:hover {
+    border-color: #0d6efd;
+    background-color: #f8f9fa;
+}
+
+.suggestion-item.suggestion-selected {
+    border-color: #198754;
+    background-color: #d1e7dd;
+}
+
+.suggestion-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.preview-card {
+    padding: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+.preview-header {
+    margin-bottom: 10px;
+}
+
+.char-counter {
+    text-align: right;
+    margin-top: 5px;
+}
+
+.form-section-title {
+    color: #495057;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+
+.required::after {
+    content: " *";
+    color: #dc3545;
+}
+</style>
+{% endblock %}

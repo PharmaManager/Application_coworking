@@ -1,0 +1,493 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}{{ action }} un membre - Administration{% endblock %}
+
+{% block page_title %}{{ action }} un membre{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb" class="breadcrumb-nav">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'liste_membres_admin' %}">Membres</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'detail_membre_admin' membre.id %}">{{ membre.get_full_name|default:membre.username }}</a></li>
+        <li class="breadcrumb-item active">{{ action }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <a href="{% url 'detail_membre_admin' membre.id %}" class="btn btn-outline-secondary" id="btn-retour">
+        <i class="bi bi-arrow-left"></i> Retour au détail
+    </a>
+    <a href="{% url 'liste_membres_admin' %}" class="btn btn-outline-secondary" id="btn-liste">
+        <i class="bi bi-list"></i> Liste des membres
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" id="form-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Informations actuelles du membre -->
+            <div class="card mb-4" id="membre-info-card">
+                <div class="card-header" id="info-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-person-circle"></i> 
+                        Membre actuel
+                    </h6>
+                </div>
+                <div class="card-body" id="info-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Nom complet:</strong> <span id="current-fullname">{{ membre.get_full_name|default:"Non renseigné" }}</span></p>
+                            <p class="mb-2"><strong>Username:</strong> <span id="current-username">{{ membre.username }}</span></p>
+                            <p class="mb-2"><strong>Email:</strong> <span id="current-email">{{ membre.email|default:"Non renseigné" }}</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Téléphone:</strong> <span id="current-phone">{{ membre.profilmembre.telephone|default:"Non renseigné" }}</span></p>
+                            <p class="mb-2"><strong>Entreprise:</strong> <span id="current-company">{{ membre.profilmembre.entreprise|default:"Non renseigné" }}</span></p>
+                            <p class="mb-2"><strong>Abonnement:</strong> <span id="current-subscription">{{ membre.profilmembre.get_type_abonnement_display }}</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulaire de modification -->
+            <div class="card" id="membre-form-card">
+                <div class="card-header" id="form-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-pencil-square"></i> 
+                        {{ action }} les informations
+                    </h5>
+                </div>
+                <div class="card-body" id="form-body">
+                    <form method="post" id="membre-form" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Section Informations utilisateur -->
+                        <div class="form-section" id="user-info-section">
+                            <h6 class="section-title">
+                                <i class="bi bi-person-circle"></i> 
+                                Informations utilisateur
+                            </h6>
+                            <hr class="section-divider">
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="username-group">
+                                        <label for="id_username" class="form-label required">
+                                            Nom d'utilisateur
+                                        </label>
+                                        <input type="text" name="username" id="id_username" class="form-control" 
+                                               value="{{ membre.username }}" required>
+                                        <div class="form-text">
+                                            Utilisé pour la connexion. Lettres, chiffres et @/./+/-/_ uniquement.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="email-group">
+                                        <label for="id_email" class="form-label required">
+                                            Email
+                                        </label>
+                                        <input type="email" name="email" id="id_email" class="form-control" 
+                                               value="{{ membre.email }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="first-name-group">
+                                        <label for="id_first_name" class="form-label required">
+                                            Prénom
+                                        </label>
+                                        <input type="text" name="first_name" id="id_first_name" class="form-control" 
+                                               value="{{ membre.first_name }}" required maxlength="30">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="last-name-group">
+                                        <label for="id_last_name" class="form-label required">
+                                            Nom
+                                        </label>
+                                        <input type="text" name="last_name" id="id_last_name" class="form-control" 
+                                               value="{{ membre.last_name }}" required maxlength="30">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Section Profil membre -->
+                        <div class="form-section" id="profil-section">
+                            <h6 class="section-title">
+                                <i class="bi bi-id-card"></i> 
+                                Profil membre
+                            </h6>
+                            <hr class="section-divider">
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="telephone-group">
+                                        <label for="{{ profil_form.telephone.id_for_label }}" class="form-label">
+                                            Téléphone
+                                        </label>
+                                        {{ profil_form.telephone }}
+                                        {% if profil_form.telephone.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in profil_form.telephone.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="entreprise-group">
+                                        <label for="{{ profil_form.entreprise.id_for_label }}" class="form-label">
+                                            Entreprise
+                                        </label>
+                                        {{ profil_form.entreprise }}
+                                        {% if profil_form.entreprise.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in profil_form.entreprise.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="type-abonnement-group">
+                                        <label for="{{ profil_form.type_abonnement.id_for_label }}" class="form-label required">
+                                            Type d'abonnement
+                                        </label>
+                                        {{ profil_form.type_abonnement }}
+                                        {% if profil_form.type_abonnement.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in profil_form.type_abonnement.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="status-info-group">
+                                        <label class="form-label">Statut du compte</label>
+                                        <div class="status-info" id="account-status">
+                                            <span class="badge {% if membre.profilmembre.abonnement_actif %}bg-success{% else %}bg-danger{% endif %}">
+                                                {% if membre.profilmembre.abonnement_actif %}Actif{% else %}Inactif{% endif %}
+                                            </span>
+                                            <small class="text-muted d-block">
+                                                Membre depuis: {{ membre.profilmembre.date_adhesion|date:"d/m/Y" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section Actions dangereuses -->
+                        <div class="form-section" id="danger-section">
+                            <h6 class="section-title text-danger">
+                                <i class="bi bi-exclamation-triangle"></i> 
+                                Actions sensibles
+                            </h6>
+                            <hr class="section-divider">
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="change-password-group">
+                                        <label class="form-label">Mot de passe</label>
+                                        <div class="d-grid">
+                                            <button type="button" class="btn btn-outline-warning" id="btn-change-password">
+                                                <i class="bi bi-key"></i> Changer le mot de passe
+                                            </button>
+                                        </div>
+                                        <div class="form-text">
+                                            Le membre devra se reconnecter après changement.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3" id="toggle-status-group">
+                                        <label class="form-label">Statut d'abonnement</label>
+                                        <div class="d-grid">
+                                            <button type="button" class="btn {% if membre.profilmembre.abonnement_actif %}btn-outline-danger{% else %}btn-outline-success{% endif %}" 
+                                                    id="btn-toggle-status">
+                                                <i class="bi bi-{% if membre.profilmembre.abonnement_actif %}pause-circle{% else %}play-circle{% endif %}"></i> 
+                                                {% if membre.profilmembre.abonnement_actif %}Désactiver{% else %}Activer{% endif %} l'abonnement
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Boutons d'action -->
+                        <div class="form-actions" id="form-actions">
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'detail_membre_admin' membre.id %}" class="btn btn-outline-secondary" id="btn-annuler">
+                                    <i class="bi bi-x-circle"></i> Annuler
+                                </a>
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-primary" id="btn-sauvegarder">
+                                        <i class="bi bi-check-circle"></i> Enregistrer les modifications
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split" 
+                                            data-bs-toggle="dropdown" id="btn-actions-dropdown">
+                                        <span class="visually-hidden">Toggle Dropdown</span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <button type="submit" name="save_and_continue" class="dropdown-item" id="btn-save-continue">
+                                                <i class="bi bi-check2"></i> Enregistrer et continuer
+                                            </button>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a href="{% url 'liste_membres_admin' %}" class="dropdown-item" id="btn-back-to-list">
+                                                <i class="bi bi-list"></i> Retour à la liste
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de changement de mot de passe -->
+<div class="modal fade" id="passwordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Changer le mot de passe</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="password-form">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="new-password" class="form-label required">Nouveau mot de passe</label>
+                        <input type="password" class="form-control" id="new-password" required>
+                        <div class="form-text">Au moins 8 caractères avec lettres et chiffres.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm-password" class="form-label required">Confirmer le mot de passe</label>
+                        <input type="password" class="form-control" id="confirm-password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-warning" id="btn-save-password">Changer le mot de passe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer l'action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modal-body-text">
+                <!-- Contenu dynamique -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="modal-cancel">Annuler</button>
+                <button type="button" class="btn btn-danger" id="modal-confirm">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('membre-form');
+    const btnAnnuler = document.getElementById('btn-annuler');
+    const btnChangePassword = document.getElementById('btn-change-password');
+    const btnToggleStatus = document.getElementById('btn-toggle-status');
+    const passwordModal = new bootstrap.Modal(document.getElementById('passwordModal'));
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const modalBodyText = document.getElementById('modal-body-text');
+    const modalConfirm = document.getElementById('modal-confirm');
+    
+    let formChanged = false;
+    let originalValues = {};
+    
+    // Stocker les valeurs originales
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        originalValues[input.name] = input.value;
+    });
+    
+    // Détection des changements dans le formulaire
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            formChanged = this.value !== originalValues[this.name];
+            updateCurrentInfo();
+        });
+    });
+    
+    // Mise à jour des informations actuelles en temps réel
+    function updateCurrentInfo() {
+        const username = document.getElementById('id_username').value;
+        const firstName = document.getElementById('id_first_name').value;
+        const lastName = document.getElementById('id_last_name').value;
+        const email = document.getElementById('id_email').value;
+        
+        document.getElementById('current-username').textContent = username || 'Non renseigné';
+        document.getElementById('current-email').textContent = email || 'Non renseigné';
+        
+        const fullName = firstName && lastName ? `${firstName} ${lastName}` : 'Non renseigné';
+        document.getElementById('current-fullname').textContent = fullName;
+    }
+    
+    // Gestion du bouton annuler avec confirmation
+    btnAnnuler.addEventListener('click', function(e) {
+        if (formChanged) {
+            e.preventDefault();
+            modalBodyText.textContent = 'Êtes-vous sûr de vouloir annuler? Toutes les modifications non sauvegardées seront perdues.';
+            confirmModal.show();
+            modalConfirm.onclick = function() {
+                window.location.href = btnAnnuler.href;
+            };
+        }
+    });
+    
+    // Validation en temps réel de l'email
+    const emailField = document.getElementById('id_email');
+    if (emailField) {
+        emailField.addEventListener('blur', function() {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (this.value && !emailRegex.test(this.value)) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            } else if (this.value) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    }
+    
+    // Auto-formatage du numéro de téléphone
+    const phoneField = document.getElementById('{{ profil_form.telephone.id_for_label }}');
+    if (phoneField) {
+        phoneField.addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            if (value.startsWith('33')) {
+                value = '+33 ' + value.substring(2).replace(/(\d{1})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+            } else if (value.startsWith('0')) {
+                value = value.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+            }
+            this.value = value.trim();
+        });
+    }
+    
+    // Gestion du changement de mot de passe
+    if (btnChangePassword) {
+        btnChangePassword.addEventListener('click', function() {
+            passwordModal.show();
+        });
+    }
+    
+    // Validation du formulaire de mot de passe
+    const passwordForm = document.getElementById('password-form');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (newPassword !== confirmPassword) {
+                document.getElementById('confirm-password').classList.add('is-invalid');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                document.getElementById('new-password').classList.add('is-invalid');
+                return;
+            }
+            
+            // Ici, vous pourriez faire un appel AJAX pour changer le mot de passe
+            alert('Fonctionnalité de changement de mot de passe à implémenter côté serveur');
+            passwordModal.hide();
+        });
+    }
+    
+    // Gestion du toggle statut
+    if (btnToggleStatus) {
+        btnToggleStatus.addEventListener('click', function() {
+            const isActive = this.classList.contains('btn-outline-danger');
+            const action = isActive ? 'désactiver' : 'activer';
+            
+            modalBodyText.innerHTML = `
+                Êtes-vous sûr de vouloir <strong>${action}</strong> l'abonnement de ce membre?
+                <br><small class="text-muted">Cette action aura un impact sur l'accès du membre aux services.</small>
+            `;
+            
+            confirmModal.show();
+            modalConfirm.onclick = function() {
+                // Ici, vous pourriez faire un appel AJAX pour changer le statut
+                alert(`Fonctionnalité de ${action} à implémenter côté serveur`);
+                confirmModal.hide();
+            };
+        });
+    }
+    
+    // Gestion de la soumission du formulaire
+    form.addEventListener('submit', function(e) {
+        const submitBtn = document.getElementById('btn-sauvegarder');
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enregistrement...';
+        submitBtn.disabled = true;
+        
+        // Réactiver le bouton après 5 secondes en cas d'erreur
+        setTimeout(() => {
+            if (submitBtn.disabled) {
+                submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Enregistrer les modifications';
+                submitBtn.disabled = false;
+            }
+        }, 5000);
+    });
+    
+    // Validation des mots de passe dans le modal
+    const newPasswordField = document.getElementById('new-password');
+    const confirmPasswordField = document.getElementById('confirm-password');
+    
+    if (newPasswordField && confirmPasswordField) {
+        function validatePasswords() {
+            if (newPasswordField.value && confirmPasswordField.value) {
+                if (newPasswordField.value !== confirmPasswordField.value) {
+                    confirmPasswordField.classList.add('is-invalid');
+                    confirmPasswordField.classList.remove('is-valid');
+                } else {
+                    confirmPasswordField.classList.remove('is-invalid');
+                    confirmPasswordField.classList.add('is-valid');
+                }
+            }
+        }
+        
+        newPasswordField.addEventListener('input', validatePasswords);
+        confirmPasswordField.addEventListener('input', validatePasswords);
+    }
+});
+</script>
+{% endblock %}

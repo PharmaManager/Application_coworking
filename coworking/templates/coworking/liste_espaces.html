@@ -1,0 +1,463 @@
+{% extends 'base.html' %}
+
+{% block title %}Nos Espaces{% endblock %}
+
+{% block content %}
+
+<style>
+/* Variables de couleur */
+:root {
+    /* Couleurs principales */
+    --color-primary: #1E3A8A; /* Bleu profond, sérieux et professionnel */
+    --color-secondary: #64748B; /* Gris-bleu, pour les textes ou éléments secondaires */
+    --color-accent: #F59E0B; /* Jaune/orangé, pour les boutons ou alertes */
+    --color-background: #F8FAFC; /* Très clair, pour le fond des pages */
+    --color-surface: #FFFFFF; /* Blanc pour cartes et sections */
+    --color-success: #16A34A; /* Vert pour succès */
+    --color-error: #DC2626; /* Rouge pour erreurs */
+    --color-warning: #FBBF24; /* Jaune pour alertes */
+    --color-info: #0EA5E9; /* Bleu clair pour infos */
+    
+    /* Textes */
+    --text-primary: #111827; /* Noir-gris foncé pour texte principal */
+    --text-secondary: #475569; /* Gris pour texte secondaire */
+    
+    /* Ombres et effets */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    
+    /* Bordures et espacements */
+    --border-radius: 8px;
+    --border-radius-lg: 12px;
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+}
+
+/* Page container */
+#espaces-page {
+    min-height: 100vh;
+    background-color: var(--color-background);
+    padding: var(--spacing-xl) var(--spacing-md);
+}
+
+.page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header de la page */
+.page-header {
+    text-align: center;
+    margin-bottom: var(--spacing-2xl);
+    padding: var(--spacing-xl) 0;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0;
+    position: relative;
+    display: inline-block;
+}
+
+.page-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-primary));
+    border-radius: 2px;
+}
+
+/* Section des filtres */
+.filters-section {
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-2xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.search-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    align-items: end;
+}
+
+.search-form p {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+    flex: 1;
+}
+
+.search-form label {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+    font-size: 0.875rem;
+}
+
+.search-form input,
+.search-form select {
+    padding: 0.75rem;
+    border: 2px solid #e2e8f0;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: var(--color-surface);
+    color: var(--text-primary);
+}
+
+.search-form input:focus,
+.search-form select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+/* Boutons */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+    font-size: 0.875rem;
+    line-height: 1.25;
+    min-height: 44px;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+    background-color: #1e40af;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+}
+
+.btn-outline:hover {
+    background-color: var(--color-primary);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Container des espaces */
+.espaces-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-2xl);
+}
+
+/* Cartes des espaces */
+.espace-card {
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    position: relative;
+}
+
+.espace-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.espace-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-primary));
+}
+
+/* Header de la carte */
+.espace-header {
+    padding: var(--spacing-lg);
+    background: linear-gradient(135deg, var(--color-primary), #1e40af);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.espace-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -50px;
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.espace-nom {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+}
+
+.espace-type {
+    display: inline-block;
+    background-color: var(--color-accent);
+    color: var(--text-primary);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Détails de l'espace */
+.espace-details {
+    padding: var(--spacing-lg);
+}
+
+.espace-details p {
+    margin: 0 0 var(--spacing-sm) 0;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.espace-capacite {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.espace-capacite::before {
+    content: '👥';
+    margin-right: var(--spacing-sm);
+    font-size: 1rem;
+}
+
+.espace-prix {
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.espace-prix::before {
+    content: '💰';
+    margin-right: var(--spacing-sm);
+    font-size: 1rem;
+}
+
+.espace-equipements {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.espace-equipements::before {
+    content: '🛠️';
+    margin-right: var(--spacing-sm);
+    font-size: 1rem;
+}
+
+/* Actions de la carte */
+.espace-actions {
+    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
+    display: flex;
+    gap: var(--spacing-md);
+    background-color: #f8fafc;
+    border-top: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+.espace-actions .btn {
+    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.8rem;
+}
+
+/* Message aucun résultat */
+.no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--spacing-2xl);
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 2px dashed var(--color-secondary);
+}
+
+.no-data {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin: 0;
+    font-style: italic;
+}
+
+.no-data::before {
+    content: '🔍';
+    display: block;
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #espaces-page {
+        padding: var(--spacing-md);
+    }
+    
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .filters-section {
+        padding: var(--spacing-md);
+    }
+    
+    .search-form {
+        flex-direction: column;
+    }
+    
+    .search-form p {
+        min-width: unset;
+    }
+    
+    .espaces-container {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .espace-actions {
+        flex-direction: column;
+    }
+    
+    .espace-actions .btn {
+        flex: unset;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 1.75rem;
+    }
+    
+    .espace-header {
+        padding: var(--spacing-md);
+    }
+    
+    .espace-details {
+        padding: var(--spacing-md);
+    }
+    
+    .espace-actions {
+        padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+    }
+}
+
+/* Animation d'apparition */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.espace-card {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.espace-card:nth-child(1) { animation-delay: 0.1s; }
+.espace-card:nth-child(2) { animation-delay: 0.2s; }
+.espace-card:nth-child(3) { animation-delay: 0.3s; }
+.espace-card:nth-child(4) { animation-delay: 0.4s; }
+.espace-card:nth-child(5) { animation-delay: 0.5s; }
+.espace-card:nth-child(6) { animation-delay: 0.6s; }    
+
+
+
+@media (max-width: 768px) { /* cible les écrans ≤ 768px, typiquement tablettes et mobiles */
+     #espaces-page.page-container {
+        margin-top: 20rem; /* ou la valeur que tu veux pour mobile */
+    }
+}
+</style>
+<div id="espaces-page" class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">Nos Espaces de Travail</h1>
+    </div>
+
+    <div class="filters-section">
+        <form method="get" class="search-form" id="espaces-filter">
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Rechercher</button>
+            <a href="{% url 'liste_espaces' %}" class="btn btn-outline">Réinitialiser</a>
+        </form>
+    </div>
+
+    <div class="espaces-container">
+        {% for espace in espaces %}
+            <div class="espace-card">
+                <div class="espace-header">
+                    <h3 class="espace-nom">{{ espace.nom }}</h3>
+                    <span class="espace-type">{{ espace.type_espace }}</span>
+                </div>
+                <div class="espace-details">
+                    <p class="espace-capacite">Capacité: {{ espace.capacite }} personnes</p>
+                    <p class="espace-prix">{{ espace.prix_heure }}€/heure</p>
+                    {% if espace.equipements %}
+                        <p class="espace-equipements">{{ espace.equipements|truncatechars:50 }}</p>
+                    {% endif %}
+                </div>
+                <div class="espace-actions">
+                    <a href="{% url 'detail_espace' espace.id %}" class="btn btn-outline">Voir détails</a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'reserver_espace_direct' espace.id %}" class="btn btn-primary">Réserver</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="no-results">
+                <p class="no-data">Aucun espace trouvé avec ces critères.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

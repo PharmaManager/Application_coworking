@@ -1,0 +1,264 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Détail - {{ evenement.nom }} - Administration{% endblock %}
+
+{% block page_title %}Détail de l'événement{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb" class="breadcrumb-nav">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'liste_evenements_admin' %}">Événements</a></li>
+        <li class="breadcrumb-item active">{{ evenement.nom }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group me-2">
+    <a href="{% url 'modifier_evenement_admin' evenement.id %}" class="btn btn-sm btn-primary">
+        <i class="bi bi-pencil"></i> Modifier
+    </a>
+    <a href="{% url 'liste_evenements_admin' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Informations principales -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-calendar-event"></i> {{ evenement.nom }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-group mb-3">
+                            <label class="text-muted small">Description</label>
+                            <p class="description-text">{{ evenement.description|linebreaks }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-group mb-3">
+                            <label class="text-muted small">Lieu</label>
+                            <p><i class="bi bi-geo-alt text-primary"></i> {{ evenement.lieu }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="info-group mb-3">
+                            <label class="text-muted small">Date de début</label>
+                            <p class="date-info">
+                                <i class="bi bi-calendar-check text-success"></i>
+                                <span class="date-value">{{ evenement.date_debut|date:"d/m/Y H:i" }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-group mb-3">
+                            <label class="text-muted small">Date de fin</label>
+                            <p class="date-info">
+                                <i class="bi bi-calendar-x text-danger"></i>
+                                <span class="date-value">{{ evenement.date_fin|date:"d/m/Y H:i" }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-group mb-3">
+                            <label class="text-muted small">Prix</label>
+                            <p class="price-info">
+                                <i class="bi bi-currency-euro text-warning"></i>
+                                <span class="price-value">{{ evenement.prix }} €</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-group mb-3">
+                            <label class="text-muted small">Organisateur</label>
+                            <p><i class="bi bi-person text-info"></i> {{ evenement.organisateur.get_full_name|default:evenement.organisateur.username }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm stats-card">
+            <div class="card-header bg-info text-white">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-graph-up"></i> Statistiques
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="stat-item mb-3">
+                    <div class="stat-label text-muted small">Places maximum</div>
+                    <div class="stat-value h4 text-primary">{{ evenement.places_max }}</div>
+                </div>
+                
+                <div class="stat-item mb-3">
+                    <div class="stat-label text-muted small">Participants inscrits</div>
+                    <div class="stat-value h4 text-success">{{ participants.count }}</div>
+                </div>
+                
+                <div class="stat-item mb-3">
+                    <div class="stat-label text-muted small">Places restantes</div>
+                    <div class="stat-value h4 text-warning">{{ evenement.places_restantes }}</div>
+                </div>
+
+                <div class="progress mt-3">
+                    <div class="progress-bar bg-success progress-bar-participants" 
+                         role="progressbar" 
+                         style="width: {{ participants.count|floatformat:0 }}{{ evenement.places_max|floatformat:0 }}%">
+                    </div>
+                </div>
+                <small class="text-muted">Taux de remplissage</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des participants -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm participants-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-people"></i> Liste des participants ({{ participants.count }})
+                </h6>
+                <div class="card-actions">
+                    <button class="btn btn-sm btn-outline-primary btn-export-participants">
+                        <i class="bi bi-download"></i> Exporter
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if participants %}
+                    <div class="table-responsive">
+                        <table class="table table-hover participants-table" id="participants-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nom complet</th>
+                                    <th>Email</th>
+                                    <th>Date d'inscription</th>
+                                    <th>Présence</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for participant in participants %}
+                                <tr class="participant-row" data-participant-id="{{ participant.id }}">
+                                    <td>
+                                        <div class="participant-info">
+                                            <i class="bi bi-person-circle text-primary"></i>
+                                            <span class="participant-name">{{ participant.get_full_name|default:participant.username }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="participant-email">{{ participant.email }}</td>
+                                    <td class="inscription-date">{{ participant.inscription_set.first.date_inscription|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <span class="badge presence-badge {% if participant.inscription_set.first.presente %}bg-success{% else %}bg-warning{% endif %}">
+                                            {% if participant.inscription_set.first.presente %}
+                                                <i class="bi bi-check-circle"></i> Présent
+                                            {% else %}
+                                                <i class="bi bi-clock"></i> En attente
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary btn-toggle-presence" 
+                                                    data-participant-id="{{ participant.id }}"
+                                                    data-bs-toggle="tooltip" 
+                                                    title="Marquer présent/absent">
+                                                <i class="bi bi-check2-square"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info btn-participant-details" 
+                                                    data-participant-id="{{ participant.id }}"
+                                                    data-bs-toggle="tooltip" 
+                                                    title="Voir détails">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state text-center py-4">
+                        <i class="bi bi-people text-muted display-1"></i>
+                        <h6 class="text-muted mt-2">Aucun participant inscrit</h6>
+                        <p class="text-muted small">Les inscriptions apparaîtront ici une fois que des membres s'inscriront à cet événement.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calcul du pourcentage de remplissage
+    const participants = {{ participants.count }};
+    const placesMax = {{ evenement.places_max }};
+    const pourcentage = placesMax > 0 ? (participants / placesMax) * 100 : 0;
+    
+    const progressBar = document.querySelector('.progress-bar-participants');
+    if (progressBar) {
+        progressBar.style.width = pourcentage + '%';
+        progressBar.textContent = Math.round(pourcentage) + '%';
+    }
+
+    // Gestion du toggle présence
+    const toggleButtons = document.querySelectorAll('.btn-toggle-presence');
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const participantId = this.dataset.participantId;
+            // Ici vous pouvez ajouter l'appel AJAX pour changer la présence
+            console.log('Toggle présence pour participant:', participantId);
+        });
+    });
+
+    // Export des participants
+    const exportBtn = document.querySelector('.btn-export-participants');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            // Ici vous pouvez ajouter la logique d'export
+            console.log('Export participants');
+        });
+    }
+
+    // Filtrage du tableau (optionnel)
+    const searchInput = document.getElementById('search-participants');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.participant-row');
+            
+            rows.forEach(row => {
+                const name = row.querySelector('.participant-name').textContent.toLowerCase();
+                const email = row.querySelector('.participant-email').textContent.toLowerCase();
+                
+                if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

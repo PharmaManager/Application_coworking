@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestion des réservations - Coworking{% endblock %}
+
+{% block content %}
+<div class="gestion-reservations-container">
+    <div class="gestion-header">
+        <h1 class="page-title">Gestion des réservations</h1>
+        <div class="header-actions">
+            <a href="{% url 'dashboard' %}" class="btn-back">← Retour au tableau de bord</a>
+            <span class="reservations-count">Total : {{ reservations.count }} réservation{{ reservations.count|pluralize }}</span>
+        </div>
+    </div>
+
+    {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" id="message-{{ forloop.counter }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="reservations-filters">
+        <div class="filter-group">
+            <select id="filter-statut" class="filter-select">
+                <option value="">Tous les statuts</option>
+                <option value="confirmee">Confirmées</option>
+                <option value="en_attente">En attente</option>
+                <option value="annulee">Annulées</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <select id="filter-espace" class="filter-select">
+                <option value="">Tous les espaces</option>
+                {% regroup reservations by espace as espaces_group %}
+                {% for espace in espaces_group %}
+                    <option value="{{ espace.grouper.id }}">{{ espace.grouper.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <input type="date" id="filter-date-debut" class="date-filter" placeholder="Date début">
+        </div>
+        
+        <div class="filter-group">
+            <input type="date" id="filter-date-fin" class="date-filter" placeholder="Date fin">
+        </div>
+        
+        <div class="filter-group">
+            <input type="text" id="search-reservation" class="search-input" placeholder="Rechercher par membre...">
+        </div>
+    </div>
+
+    <div class="reservations-table-container">
+        <table class="reservations-table" id="reservations-table">
+            <thead class="table-header">
+                <tr>
+                    <th class="th-id">ID</th>
+                    <th class="th-membre">Membre</th>
+                    <th class="th-espace">Espace</th>
+                    <th class="th-dates">Dates</th>
+                    <th class="th-duree">Durée</th>
+                    <th class="th-prix">Prix</th>
+                    <th class="th-statut">Statut</th>
+                    <th class="th-creation">Créée le</th>
+                    <th class="th-actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="table-body">
+                {% for reservation in reservations %}
+                    <tr class="reservation-row" 
+                        data-statut="{{ reservation.statut }}"
+                        data-espace="{{ reservation.espace.id }}"
+                        data-membre="{{ reservation.membre.username }}"
+                        id="reservation-{{ reservation.id }}">
+                        
+                        <td class="td-id">
+                            <span class="reservation-id">#{{ reservation.id }}</span>
+                        </td>
+                        
+                        <td class="td-membre">
+                            <div class="membre-info">
+                                <span class="membre-nom">
+                                    {{ reservation.membre.get_full_name|default:reservation.membre.username }}
+                                </span>
+                                <span class="membre-username">@{{ reservation.membre.username }}</span>
+                                <span class="membre-email">{{ reservation.membre.email }}</span>
+                            </div>
+                        </td>
+                        
+                        <td class="td-espace">
+                            <div class="espace-info">
+                                <span class="espace-nom">{{ reservation.espace.nom }}</span>
+                                {% if reservation.espace.capacite %}
+                                    <span class="espace-capacite">{{ reservation.espace.capacite }} places</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        
+                        <td class="td-dates">
+                            <div class="dates-info">
+                                <div class="date-debut">
+                                    <span class="date-label">Début :</span>
+                                    <span class="date-value">{{ reservation.date_debut|date:"d/m/Y H:i" }}</span>
+                                </div>
+                                <div class="date-fin">
+                                    <span class="date-label">Fin :</span>
+                                    <span class="date-value">{{ reservation.date_fin|date:"d/m/Y H:i" }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <td class="td-duree">
+                            <span class="duree-value" data-debut="{{ reservation.date_debut|date:'c' }}" data-fin="{{ reservation.date_fin|date:'c' }}">
+                                <!-- Durée calculée avec JS -->
+                            </span>
+                        </td>
+                        
+                        <td class="td-prix">
+                            <span class="prix-total">{{ reservation.prix_total }}€</span>
+                        </td>
+                        
+                        <td class="td-statut">
+                            <span class="statut-badge statut-{{ reservation.statut }}">
+                                {{ reservation.get_statut_display }}
+                            </span>
+                        </td>
+                        
+                        <td class="td-creation">
+                            <span class="date-creation">{{ reservation.date_creation|date:"d/m/Y H:i" }}</span>
+                        </td>
+                        
+                        <td class="td-actions">
+                            <div class="actions-group">
+                                <button class="btn-action btn-view" 
+                                        onclick="voirDetailsReservation({{ reservation.id }})"
+                                        title="Voir les détails">
+                                    👁️
+                                </button>
+                                
+                                {% if reservation.statut == 'en_attente' %}
+                                    <button class="btn-action btn-confirm"
+                                            onclick="confirmerReservation({{ reservation.id }})"
+                                            title="Confirmer">
+                                        ✅
+                                    </button>
+                                    
+                                    <button class="btn-action btn-cancel"
+                                            onclick="annulerReservation({{ reservation.id }})"
+                                            title="Annuler">
+                                        ❌
+                                    </button>
+                                {% elif reservation.statut == 'confirmee' %}
+                                    <button class="btn-action btn-cancel"
+                                            onclick="annulerReservation({{ reservation.id }})"
+                                            title="Annuler">
+                                        ❌
+                                    </button>
+                                {% endif %}
+                                
+                                <button class="btn-action btn-edit"
+                                        onclick="modifierReservation({{ reservation.id }})"
+                                        title="Modifier">
+                                    ✏️
+                                </button>
+                                
+                                <button class="btn-action btn-delete"
+                                        onclick="supprimerReservation({{ reservation.id }})"
+                                        title="Supprimer">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr class="no-reservations-row">
+                        <td colspan="9" class="no-data-message">
+                            <div class="empty-state">
+                                <h3 class="empty-title">Aucune réservation trouvée</h3>
+                                <p class="empty-text">Il n'y a actuellement aucune réservation.</p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="reservations-stats">
+        <div class="stat-card">
+            <span class="stat-label">Total réservations</span>
+            <span class="stat-value" id="total-reservations">{{ reservations.count }}</span>
+        </div>
+        
+        <div class="stat-card">
+            <span class="stat-label">En attente</span>
+            <span class="stat-value stat-attente" id="reservations-attente">
+                <!-- À calculer -->
+            </span>
+        </div>
+        
+        <div class="stat-card">
+            <span class="stat-label">Confirmées</span>
+            <span class="stat-value stat-confirmees" id="reservations-confirmees">
+                <!-- À calculer -->
+            </span>
+        </div>
+        
+        <div class="stat-card">
+            <span class="stat-label">Chiffre d'affaires</span>
+            <span class="stat-value" id="ca-total">
+                <!-- Somme des prix_total -->
+            </span>
+        </div>
+    </div>
+</div>
+
+<script>
+// Fonctions JavaScript de base
+function voirDetailsReservation(reservationId) {
+    console.log('Voir détails réservation:', reservationId);
+}
+
+function confirmerReservation(reservationId) {
+    if (confirm('Confirmer cette réservation ?')) {
+        // Ajax pour confirmer
+        console.log('Confirmer réservation:', reservationId);
+    }
+}
+
+function annulerReservation(reservationId) {
+    if (confirm('Annuler cette réservation ?')) {
+        // Ajax pour annuler
+        console.log('Annuler réservation:', reservationId);
+    }
+}
+
+function modifierReservation(reservationId) {
+    console.log('Modifier réservation:', reservationId);
+}
+
+function supprimerReservation(reservationId) {
+    if (confirm('Supprimer définitivement cette réservation ?')) {
+        console.log('Supprimer réservation:', reservationId);
+    }
+}
+
+// Calcul de la durée
+document.addEventListener('DOMContentLoaded', function() {
+    const dureeElements = document.querySelectorAll('.duree-value');
+    
+    dureeElements.forEach(element => {
+        const debut = new Date(element.dataset.debut);
+        const fin = new Date(element.dataset.fin);
+        const diffMs = fin - debut;
+        const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+        
+        element.textContent = diffHours + 'h';
+    });
+    
+    // Calcul des statistiques
+    calculerStatistiques();
+});
+
+function calculerStatistiques() {
+    const rows = document.querySelectorAll('.reservation-row');
+    let attente = 0, confirmees = 0, caTotal = 0;
+    
+    rows.forEach(row => {
+        const statut = row.dataset.statut;
+        const prix = parseFloat(row.querySelector('.prix-total').textContent);
+        
+        if (statut === 'en_attente') attente++;
+        if (statut === 'confirmee') confirmees++;
+        if (statut === 'confirmee') caTotal += prix;
+    });
+    
+    document.getElementById('reservations-attente').textContent = attente;
+    document.getElementById('reservations-confirmees').textContent = confirmees;
+    document.getElementById('ca-total').textContent = caTotal.toFixed(2) + '€';
+}
+</script>
+{% endblock %}
